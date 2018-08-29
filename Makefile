@@ -86,7 +86,7 @@ STATIC_LINK_FLAG := rcs
 
 # Include path
 # Must be use with -I
-INC_FLAG := -I $(INC_FOLDER)
+INC_FLAG := -I $(INC_FOLDER) -I lib/bytecode-description/include
 
 #####
 ##### LIBRARY
@@ -94,15 +94,19 @@ INC_FLAG := -I $(INC_FOLDER)
 
 # Path to libaries if not in $PATH, for example (relative to the project folder): lib/
 # Must be use with -L
-LIBS_PATH :=
+LIBS_PATH := -L lib/bytecode-description/build/static
 
 # For example: -lsfml-graphics
-LIBS :=
+LIBS := -lbytecode_desc
 
 # Library that require to be build
-LIB_TO_BUILD := 
+LIB_TO_BUILD := lib/bytecode-description/build/static/libbytecode_desc.a
 
 # Create rules to build the libraries
+
+lib/bytecode-description/build/static/libbytecode_desc.a:
+	@$(call _special,BUILDING STATIC LIBRARY ($@)...)
+	@cd lib/bytecode-description/ && make MAKEFLAGS="" | sed "s/^/\t/"
 
 ###############################################
 #                   PRIVATE                   #
@@ -183,10 +187,11 @@ _SRC_FILES := $(filter-out $(_SRC_MAINS),$(shell find $(SRC_FOLDER) -name '*$(EX
 
 # All sources file directories
 _SRC_DIR := $(sort $(dir $(_SRC_FILES)))
+_SRC_DIR_MAINS := $(sort $(dir $(_SRC_MAINS)))
 
-_EXE_DIR := $(addprefix $(BUILD_EXE_FOLDER)/,$(_SRC_DIR))
-_SHARED_DIR := $(addprefix $(BUILD_SHARED_FOLDER)/,$(_SRC_DIR))
-_STATIC_DIR := $(addprefix $(BUILD_STATIC_FOLDER)/,$(_SRC_DIR))
+_EXE_DIR := $(addprefix $(BUILD_EXE_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
+_SHARED_DIR := $(addprefix $(BUILD_SHARED_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
+_STATIC_DIR := $(addprefix $(BUILD_STATIC_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
 
 _BUILD_DIR := $(_EXE_DIR) $(_SHARED_DIR) $(_STATIC_DIR)
 
@@ -226,7 +231,7 @@ ifneq ($(findstring $(TARGET_STATIC),$(TARGET_ALL)),)
 	@make static
 endif
 
-executable: 
+executable:
 	@$(call _header,BUILDING EXECUTABLE...)
 	@make $(TARGET_EXE)
 

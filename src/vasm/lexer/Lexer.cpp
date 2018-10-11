@@ -111,13 +111,13 @@ Type ident_type(std::string content) {
 
 std::optional<std::pair<Token, Position>> tokenize_ident(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
-    if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
+    if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
         return {};
 
     Location location { position, 1 };
     position = move_position(source, position);
     c = at(source, position);
-    while(!is_eof(source, position) &&  location.line == position.line && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) {
+    while(!is_eof(source, position) && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) {
         location.lenght++;
         position = move_position(source, position);
         c = at(source, position);
@@ -149,6 +149,14 @@ std::optional<std::pair<Token, Position>> tokenize_string(std::vector<std::strin
         } else if (escape) {
             escape = false;
             switch(c) {
+                case '\a':
+                case '\b':
+                case '\f':
+                case '\n':
+                case '\r':
+                case '\t':
+                case '\v':
+                    break;
                 case '\\':
                     content += '\t';
                     break;
@@ -184,16 +192,8 @@ std::optional<std::pair<Token, Position>> tokenize_string(std::vector<std::strin
             content += c;
         }
 
-        auto old_line = position.line;
         location.lenght++;
         position = move_position(source, position);
-
-        if (old_line != position.line) {
-            if (!escape)
-                content += '\n';
-            escape = false;
-        }
-
         c = at(source, position);
     }
 
@@ -252,6 +252,7 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
         position = move_position(source, position);
         c = at(source, position);
         token.location.lenght++;
+        token.location.character += 2;
         switch(c) {
             case 'x':
                 token.type = Type::Hex;
@@ -280,6 +281,7 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
                 token.location.lenght++;
                 break;
             default:
+                token.location.character -= 2;
                 break;
         }
     }
@@ -296,7 +298,7 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
 
 std::optional<std::pair<Token, Position>> tokenize_base(std::vector<std::string> const& source, Position const& position) {
     char c = at(source, position);
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
         return tokenize_ident(source, position);
 
     if (c >= '0' && c <= '9')

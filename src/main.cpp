@@ -3,12 +3,14 @@
 #include <vcrate/instruction/Make.hpp>
 
 #include <vcrate/vasm/lexer/Lexer.hpp>
+#include <vcrate/vasm/Reader.hpp>
 
 #include <iostream>
 
 int main() {
 
-    std::vector<std::string> source = {
+    std::vector<std::string> source = read_file("test/test0.vasm");
+    /*{
         "mov %A, 42",
         "; this is a comment",
         "mov %F,@ %SP",
@@ -26,7 +28,7 @@ int main() {
         "123'23",
         "12__'456",
         "123_",
-    };
+    };*/
 
     for(auto& s : source)
         s.push_back('\n');

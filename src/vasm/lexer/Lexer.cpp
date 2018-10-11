@@ -245,6 +245,7 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
     token.location.character = position.character;
     token.location.line = position.line;
     token.location.lenght = 0;
+    token.content = "";
 
     std::unordered_set<char> symbols = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
@@ -252,7 +253,6 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
         position = move_position(source, position);
         c = at(source, position);
         token.location.lenght++;
-        token.location.character += 2;
         switch(c) {
             case 'x':
                 token.type = Type::Hex;
@@ -281,15 +281,23 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
                 token.location.lenght++;
                 break;
             default:
-                token.location.character -= 2;
+                token.content += '0';
                 break;
         }
     }
-
+    
     while(!is_eof(source, position) && symbols.find(c) != symbols.end()) {
+        token.content += c;
         position = move_position(source, position);
         c = at(source, position);
         token.location.lenght++;
+
+        while(!is_eof(source, position) && (c == '\'' || c == '_')) {
+            position = move_position(source, position);
+            c = at(source, position);
+            token.location.lenght++;
+        }
+
     }
 
     token.content = at(source, token.location);

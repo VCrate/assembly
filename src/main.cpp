@@ -20,12 +20,16 @@ int main() {
         "\"a",
         "b\"",
         "ident",
-        "on2lines"
+        "on2lines",
+        "123",
+        "123'23",
+        "12__'456",
+        "123_"
     };
 
     for(auto& s : source)
         s.emplace_back('\n');
-        
+
     for(auto token : vcrate::vasm::lexer::tokenize(source)) {
         std::cout << token.location.line << "/" << token.location.character << " ~" << token.location.lenght << " > '" << token.content << "'\n";
     }

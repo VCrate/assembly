@@ -4,7 +4,7 @@ namespace vcrate::vasm::lexer {
 
 enum class Type {
 
-    Colon, Comma, NewLine,
+    Colon, Comma,
 
     Register,
     Ident, 
@@ -16,7 +16,9 @@ enum class Type {
 
     Plus, Minus, Div, Mult, Mod, 
     ShiftL, ShiftR, RotateL, RotateR,
-    Or, And, Xor, Neg, Not,
+    Or, And, Xor, Not,
+
+    CloseBracket, OpenBracket,
 
 };
 

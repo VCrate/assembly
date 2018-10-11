@@ -8,7 +8,6 @@ struct Position {
 
     ui32 line;
     ui32 character;
-    ui32 lenght;
 
 };
 

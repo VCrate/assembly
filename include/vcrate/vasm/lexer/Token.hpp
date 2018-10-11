@@ -2,15 +2,17 @@
 
 #include <vcrate/Alias.hpp>
 
-#include <vcrate/vasm/lexer/Position.hpp>
+#include <vcrate/vasm/lexer/Location.hpp>
 #include <vcrate/vasm/lexer/Type.hpp>
+
+#include <string>
 
 namespace vcrate::vasm::lexer {
 
 struct Token {
 
-    Position position;
-
+    Location location;
+    std::string content;
     Type type;
 
 };

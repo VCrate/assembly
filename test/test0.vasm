@@ -1,0 +1,26 @@
+        mov %A, 42              ; a = 42
+        mov %B, 1337            ; b = 1337
+        add %A, %B              ; a += b
+        dbg %A                  ; print a '\n'
+        out '\n'
+
+        itf %A                  ; a = (float) a
+        itf %B                  ; b = (float) b
+        divf %B, %A             ; b /= a
+        dbg %B                  ; print b '\n'
+        out '\n'
+
+        mov %C, 0               ; c = 0
+begin:
+        cmp %C, msg_end - msg   ; if c >= msg.len
+        jmpge end               ; then goto end
+
+        out [%C + msg]                ; print *(c + msg)
+
+        inc %C                  ; ++c
+end:
+        hlt                     ; halt program
+
+msg:
+        db "Hello world!\n"
+msg_end:

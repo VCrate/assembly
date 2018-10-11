@@ -97,7 +97,7 @@ INC_FLAG := -I $(INC_FOLDER) -I lib/bytecode-description/include
 LIBS_PATH := -L lib/bytecode-description/build/static
 
 # For example: -lsfml-graphics
-LIBS := -lbytecode_desc
+LIBS := -lbytecode_desc -lstdc++fs
 
 # Library that require to be build
 LIB_TO_BUILD := lib/bytecode-description/build/static/libbytecode_desc.a

@@ -9,7 +9,7 @@
 
 int main() {
 
-    std::vector<std::string> source = read_file("test/test0.vasm");
+    std::vector<std::string> source = vcrate::vasm::read_file("test/test0.vasm");
     /*{
         "mov %A, 42",
         "; this is a comment",

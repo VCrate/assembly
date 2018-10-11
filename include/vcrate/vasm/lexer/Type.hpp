@@ -20,6 +20,7 @@ enum class Type {
 
     CloseBracket, OpenBracket,
 
+    EndOfFile,
 };
 
 }

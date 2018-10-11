@@ -9,7 +9,9 @@
 
 namespace vcrate::vasm::lexer {
 
-std::pair<Token, Position> make_token(std::vector<std::string> const& source, Location const& location, Type type);
+using TokenPos = std::pair<Token, Position>;
+
+Result<TokenPos> make_token(std::vector<std::string> const& source, Location const& location, Type type);
 
 char at(std::vector<std::string> const& source, Position const& position);
 std::string_view at(std::vector<std::string> const& source, Location const& location);
@@ -20,11 +22,11 @@ Position pass(std::vector<std::string> const& source, Location const& Location);
 
 bool is_eof(std::vector<std::string> const& source, Position const& position);
 
-std::optional<std::pair<Token, Position>> tokenize_base(std::vector<std::string> const& source, Position const& position);
+Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position const& position);
 
 
 
-std::vector<Token> tokenize(std::vector<std::string> const& source) {
+Result<std::vector<Token>> tokenize(std::vector<std::string> const& source) {
     Position position = {
         .line = 0,
         .character = 0,
@@ -36,22 +38,24 @@ std::vector<Token> tokenize(std::vector<std::string> const& source) {
 
     while(!is_eof(source, position)) {
         auto res = tokenize_base(source, position);
-        if (!res) {
-            std::cerr << "Unknow character '" << at(source, position) << "'\n";
-            return tokens;
+        if (res.is_error()) {
+            return Result<std::vector<Token>>::error(res.get_error());
         }
-        position = skip_whitespace(source, res->second);
-        tokens.emplace_back(std::move(res->first));
+        auto&&[token, pos] = res.get_result();
+        if (token.type == Type::EndOfFile)
+            break;
+        position = skip_whitespace(source, pos);
+        tokens.emplace_back(std::move(token));
     }
 
-    return tokens;
+    return Result<std::vector<Token>>::success(tokens);
 }
 
-std::pair<Token, Position> make_token(std::vector<std::string> const& source, Location const& location, Type type) {
-    return { 
+Result<TokenPos> make_token(std::vector<std::string> const& source, Location const& location, Type type) {
+    return Result<TokenPos>::success({ 
         Token {location, std::string(at(source, location)), type}, 
         pass(source, location) 
-    };
+    });
 }
 
 std::string_view at(std::vector<std::string> const& source, Location const& location) {
@@ -109,10 +113,10 @@ Type ident_type(std::string content) {
     return Type::Ident;
 }
 
-std::optional<std::pair<Token, Position>> tokenize_ident(std::vector<std::string> const& source, Position position) {
+Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
-        return {};
+        return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1}});
 
     Location location { position, 1 };
     position = move_position(source, position);
@@ -126,10 +130,10 @@ std::optional<std::pair<Token, Position>> tokenize_ident(std::vector<std::string
     return make_token(source, location, ident_type(std::string { at(source, location) }));
 }
 
-std::optional<std::pair<Token, Position>> tokenize_string(std::vector<std::string> const& source, Position position) {
+Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c == '"' || c == '\''))
-        return {};
+        return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1}});
 
     char quote = c;
 
@@ -184,8 +188,13 @@ std::optional<std::pair<Token, Position>> tokenize_string(std::vector<std::strin
                 default:
                     if (c == quote)
                         content += c;
-                    else
-                        throw std::runtime_error("Unknown escape sequence");
+                    else {
+                        Location location;
+                        location.line = position.line;
+                        location.character = position.character - 1;
+                        location.lenght = 2;
+                        return Result<TokenPos>::error({ Error::Type::UnknownEscapeSequence, location });
+                    }
                     break;
             }
         } else {
@@ -198,19 +207,19 @@ std::optional<std::pair<Token, Position>> tokenize_string(std::vector<std::strin
     }
 
     location.lenght++;
-    return {{
+    return Result<TokenPos>::success({
         Token {location, content, Type::String}, 
         pass(source, location) 
-    }};
+    });
 }
 
-std::optional<std::pair<Token, Position>> tokenize_register_or_mod(std::vector<std::string> const& source, Position position) {
+Result<TokenPos> tokenize_register_or_mod(std::vector<std::string> const& source, Position position) {
     Location location { position, 1 };
     auto ident = tokenize_ident(source, move_position(source, position));
-    if (!ident)
+    if (ident.is_error())
         return make_token(source, location, Type::Mod);
 
-    auto&& [token, pos] = *ident;
+    auto&& [token, pos] = ident.get_result();
     if (token.content == "A" ||
         token.content == "B" ||
         token.content == "C" ||
@@ -232,13 +241,13 @@ std::optional<std::pair<Token, Position>> tokenize_register_or_mod(std::vector<s
         return make_token(source, location, Type::Register);
     } 
 
-    return {}; 
+    return make_token(source, location, Type::Mod);
 }
 
-std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::string> const& source, Position position) {
+Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c >= '0' && c <= '9'))
-        return {};
+        return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1}});
 
     Token token;
     token.type = Type::Dec;
@@ -300,11 +309,10 @@ std::optional<std::pair<Token, Position>> tokenize_number(std::vector<std::strin
 
     }
 
-    token.content = at(source, token.location);
-    return {{ token, position }};
+    return Result<TokenPos>::success({ token, position });
 }
 
-std::optional<std::pair<Token, Position>> tokenize_base(std::vector<std::string> const& source, Position const& position) {
+Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position const& position) {
     char c = at(source, position);
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
         return tokenize_ident(source, position);
@@ -326,7 +334,7 @@ std::optional<std::pair<Token, Position>> tokenize_base(std::vector<std::string>
         case ';': {
             Position new_position { position.line + 1, 0 };
             if (is_eof(source, new_position))
-                return {};
+                return Result<TokenPos>::success({{{new_position, 0}, "", Type::EndOfFile}, new_position});
             return tokenize_base(source, new_position);
         }
         case ',':
@@ -366,9 +374,9 @@ std::optional<std::pair<Token, Position>> tokenize_base(std::vector<std::string>
             return make_token(source, { position, 1 }, Type::CloseBracket);
 
         default:
-            return {};       
+            break;
     }
-    return {};
+    return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1} });
 }
 
 }

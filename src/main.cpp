@@ -9,8 +9,9 @@
 int main() {
 
     std::vector<std::string> source = {
-        "mov %A, 42"
+        "mov %A, 42",
         "; this is a comment",
+        "mov %F,@ %SP",
         "# align 4",
         "db \"some thing\"",
         "db \"' \\\" \\ttab\n\ttab\n\\ttab \\\\ \\n \n\"",
@@ -24,14 +25,18 @@ int main() {
         "123",
         "123'23",
         "12__'456",
-        "123_"
+        "123_",
     };
 
     for(auto& s : source)
-        s.emplace_back('\n');
+        s.push_back('\n');
 
-    for(auto token : vcrate::vasm::lexer::tokenize(source)) {
-        std::cout << token.location.line << "/" << token.location.character << " ~" << token.location.lenght << " > '" << token.content << "'\n";
+    auto res = vcrate::vasm::lexer::tokenize(source);
+    if(auto err = res.get_if_error(); err) {
+        err->report_error(std::cerr, source);
+    } else {
+        for(auto token : res.get_result()) {
+            std::cout << token.location.line << "/" << token.location.character << " ~" << token.location.lenght << " > '" << token.content << "'\n";
+        }
     }
-
 }

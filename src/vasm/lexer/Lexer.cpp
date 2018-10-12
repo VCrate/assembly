@@ -26,7 +26,7 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
 
 
 
-Result<std::vector<Token>> tokenize(std::vector<std::string> const& source) {
+LexerResult tokenize(std::vector<std::string> const& source) {
     Position position = {
         .line = 0,
         .character = 0,
@@ -42,10 +42,14 @@ Result<std::vector<Token>> tokenize(std::vector<std::string> const& source) {
             return Result<std::vector<Token>>::error(res.get_error());
         }
         auto&&[token, pos] = res.get_result();
+
         if (token.type == Type::EndOfFile)
             break;
+
         position = skip_whitespace(source, pos);
-        tokens.emplace_back(std::move(token));
+
+        if (token.type != Type::Comment)
+            tokens.emplace_back(std::move(token));
     }
 
     return Result<std::vector<Token>>::success(tokens);
@@ -73,13 +77,9 @@ bool is_eof(std::vector<std::string> const& source, Position const& position) {
 }
 
 Position skip_whitespace(std::vector<std::string> const& source, Position position) {
-    while(!is_eof(source, position)) {
-        auto c = at(source, position);
-        if (c != ' ' && c != '\t' && c != '\n' && c != '\r') 
-            break;
-
+    static std::unordered_set<char> whitespaces {' ', '\t', '\n', '\n', '\r', '\f', '\v'};
+    while(!is_eof(source, position) && whitespaces.count(at(source, position)) > 0)
         position = move_position(source, position);
-    }
     return position;
 }
 
@@ -116,7 +116,7 @@ Type ident_type(std::string content) {
 Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
-        return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1}});
+        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1}});
 
     Location location { position, 1 };
     position = move_position(source, position);
@@ -133,7 +133,7 @@ Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position
 Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c == '"' || c == '\''))
-        return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1}});
+        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1}});
 
     char quote = c;
 
@@ -193,7 +193,7 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
                         location.line = position.line;
                         location.character = position.character - 1;
                         location.lenght = 2;
-                        return Result<TokenPos>::error({ Error::Type::UnknownEscapeSequence, location });
+                        return Result<TokenPos>::error({ Error::Type::LexUnknownEscapeSequence, location });
                     }
                     break;
             }
@@ -247,7 +247,7 @@ Result<TokenPos> tokenize_register_or_mod(std::vector<std::string> const& source
 Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c >= '0' && c <= '9'))
-        return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1}});
+        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1}});
 
     Token token;
     token.type = Type::Dec;
@@ -331,12 +331,8 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
         case '#':
             return make_token(source, { position, 1 }, Type::Directive);
 
-        case ';': {
-            Position new_position { position.line + 1, 0 };
-            if (is_eof(source, new_position))
-                return Result<TokenPos>::success({{{new_position, 0}, "", Type::EndOfFile}, new_position});
-            return tokenize_base(source, new_position);
-        }
+        case ';':
+            return make_token(source, {position, static_cast<ui32>(source[position.line].size()) - position.character}, Type::Comment);
         case ',':
             return make_token(source, { position, 1 }, Type::Comma);
 
@@ -376,7 +372,7 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
         default:
             break;
     }
-    return Result<TokenPos>::error({Error::Type::UnknownCharacter, {position, 1} });
+    return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1} });
 }
 
 }

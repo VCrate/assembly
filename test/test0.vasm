@@ -6,7 +6,7 @@
 
         itf %A                  ; a = (float) a
         itf %B                  ; b = (float) b
-        divf %B, %A             ; b /= a
+        divf B, %A             ; b /= a
         dbg %B                  ; print b '\n'
         out '\n'
 
@@ -14,8 +14,7 @@
 begin:
         cmp %C, msg_end - msg   ; if c >= msg.len
         jmpge end               ; then goto end
-
-        out [%C + msg]                ; print *(c + msg)
+        out [%C + msg]          ; print *(c + msg)
 
         inc %C                  ; ++c
 end:

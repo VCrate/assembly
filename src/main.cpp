@@ -28,17 +28,18 @@ int main() {
         "123'23",
         "12__'456",
         "123_",
-    };*/
+    };
 
     for(auto& s : source)
-        s.push_back('\n');
+        s.push_back('\n');*/
 
     auto res = vcrate::vasm::lexer::tokenize(source);
     if(auto err = res.get_if_error(); err) {
         err->report_error(std::cerr, source);
+        return 1;
     } else {
         for(auto token : res.get_result()) {
-            std::cout << token.location.line << "/" << token.location.character << " ~" << token.location.lenght << " > '" << token.content << "'\n";
+            std::cout << token.location.line << "/" << token.location.character << " ~" << token.location.lenght << " > " << vcrate::vasm::lexer::to_string(token.type) << " '" << token.content << "'\n";
         }
     }
 }

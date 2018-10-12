@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 namespace vcrate::vasm::lexer {
 
 enum class Type {
@@ -20,7 +22,9 @@ enum class Type {
 
     CloseBracket, OpenBracket,
 
-    EndOfFile,
+    EndOfFile, Comment,
 };
+
+std::string_view to_string(Type type);
 
 }

@@ -54,6 +54,7 @@ argument :=
     constant
 |   register
 |   "[" register [ "+" constant ] "]"
+|   "[" constant "+" register "]"
 ;
 
 constant :=
@@ -83,8 +84,17 @@ binary_op :=
 |   ">>"
 |   ">>>"
 |   "|"
+|   "||"
 |   "&"
+|   "&&"
 |   "^"
+|   "**"
+|   "<"
+|   "<="
+|   ">="
+|   ">"
+|   "=="
+|   "!="
 ;
 
 ident :=

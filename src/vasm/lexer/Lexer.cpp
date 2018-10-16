@@ -46,10 +46,13 @@ LexerResult tokenize(std::vector<std::string> const& source) {
         if (token.type == Type::EndOfFile)
             break;
 
-        position = skip_whitespace(source, pos);
-
         if (token.type != Type::Comment)
             tokens.emplace_back(std::move(token));
+
+        auto new_position = skip_whitespace(source, pos);
+        if (position.line < new_position.line)
+            tokens.push_back({{{position.line, static_cast<ui32>(source[position.line].size() - 1)}, 1}, "", Type::NewLine});
+        position = new_position;
     }
 
     return Result<std::vector<Token>>::success(tokens);

@@ -34,6 +34,7 @@ std::string_view to_string(Type type) {
         case Type::OpenBracket: return "OpenBracket";
         case Type::EndOfFile: return "EndOfFile"; 
         case Type::Comment: return "Comment";
+        case Type::NewLine: return "NewLine";
     }
     return "Undefined";
 }

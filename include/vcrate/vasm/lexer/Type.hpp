@@ -22,7 +22,7 @@ enum class Type {
 
     CloseBracket, OpenBracket,
 
-    EndOfFile, Comment,
+    EndOfFile, Comment, NewLine
 };
 
 std::string_view to_string(Type type);

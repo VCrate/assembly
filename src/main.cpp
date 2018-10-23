@@ -5,6 +5,8 @@
 #include <vcrate/vasm/lexer/Lexer.hpp>
 #include <vcrate/vasm/Reader.hpp>
 
+#include <vcrate/vasm/test/Test.hpp>
+
 #include <iostream>
 
 int main() {

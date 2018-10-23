@@ -37,23 +37,50 @@ std::ostream& Error::report_error(std::ostream& os, std::vector<std::string> con
 
     os << std::string(pad_size + 3 + location.character, ' ') << std::string(location.lenght, '~') << '\n';
 
-    switch(type) {
-        case Error::Type::LexUnknownCharacter:
-            os << "Lexical error "; 
-            if(use_color)
-                os << "\033[0m";
-            return os << "(" << location.line << ":" << location.character + 1 << ") Unknown character\n";
-        case Error::Type::LexUnknownEscapeSequence:
-            os << "Lexical error "; 
-            if(use_color)
-                os << "\033[0m";
-            return os << "(" << location.line << ":" << location.character + 1 << ") Unknown escape sequence in string\n";
+    auto info = get_type_info(type);
+    os << to_string(info.category) << " error";
+    if(use_color)
+        os << "\033[0m";
+    return os << "(" << location.line << ":" << location.character + 1 << ") " << to_string(info.type);
+}
+
+std::string_view to_string(Error::TypeInfo const& tinfo) {
+    return std::string { to_string(tinfo.category) } + " error: " + std::string{ to_string(tinfo.type) };
+}
+
+std::string_view to_string(Error::TypeInfo::Category const& cat) {
+    switch(cat) {
+        case Error::TypeInfo::Category::Lexical:
+            return "Lexical";
+        case Error::TypeInfo::Category::Internal:
         default:
-            os << "Error "; 
-            if(use_color)
-                os << "\033[0m";
-            return os << "(" << location.line << ":" << location.character + 1 << ") Internal error...\n";
+            return "Internal";
     }
 }
+
+std::string_view to_string(Error::Type const& type) {
+    switch(type) {
+        case Error::Type::LexUnknownCharacter:
+            return "Unknown character";
+        case Error::Type::LexUnknownEscapeSequence:
+            return "Invalid escape sequence in string";
+        case Error::Type::Internal:
+        default:
+            return "Internal error";
+    }
+}
+
+Error::TypeInfo get_type_info(Error::Type type) {
+    switch(type) {
+        case Error::Type::LexUnknownCharacter:
+        case Error::Type::LexUnknownEscapeSequence:
+            return {type, Error::TypeInfo::Category::Lexical};
+
+        case Error::Type::Internal:
+        default:
+            return {type, Error::TypeInfo::Category::Internal};
+    }
+}
+
 
 }

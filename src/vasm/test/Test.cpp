@@ -17,6 +17,8 @@ std::string format_location(lexer::Location const& loc) {
 }
 
 std::string format_token(lexer::Token const& token) {
+    if (token.type == lexer::Type::NewLine)
+        return  "{" + format_location(token.location) + " {} " + std::string{ lexer::to_string(token.type) } + "}";
     return  "{" + format_location(token.location) + " {" + token.content + "} " + std::string{ lexer::to_string(token.type) } + "}";
 }
 
@@ -74,7 +76,7 @@ void TestCase::lexer_test(std::vector<std::string> const& source, lexer::LexerRe
             res.test += " ";
         first = false;
 
-        res.test += "{" + s + "}";
+        res.test += "{" + s.substr(0, s.size() - 1) + "}";
     }
 
     res.expect = format_lexer_result(expected);
@@ -116,13 +118,13 @@ std::ostream& Test::report(std::ostream& os, bool use_color) {
 
     os << color_bold << "[" << name << "]\n" << color_reset;
     for(auto const& testcase : cases) {
-        os << "# " << testcase.testcase << '\n';
+        os << color_blue << "# " << testcase.testcase << '\n' << color_reset;
 
         for(auto const& res : testcase.results) {
             if (!res.but.empty())
-                os << color_red << "\tFAIL  ";
+                os << color_red << color_bold << "\tFAIL  ";
             else
-                os << color_green << "\tOK    ";
+                os << color_green << color_bold << "\tOK    ";
 
             os << color_reset << res.test << '\n';
             os << "\t  ~   " << res.expect << '\n';

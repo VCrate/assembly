@@ -34,7 +34,12 @@ LexerResult tokenize(std::vector<std::string> const& source) {
 
     std::vector<Token> tokens;
 
-    position = skip_whitespace(source, position);
+    auto new_position = skip_whitespace(source, position);
+
+    if (position.line < new_position.line)
+        tokens.push_back({{{position.line, static_cast<ui32>(source[position.line].size() - 1)}, 1}, "\n", Type::NewLine});
+
+    position = new_position;
 
     while(!is_eof(source, position)) {
         auto res = tokenize_base(source, position);
@@ -51,7 +56,7 @@ LexerResult tokenize(std::vector<std::string> const& source) {
 
         auto new_position = skip_whitespace(source, pos);
         if (position.line < new_position.line)
-            tokens.push_back({{{position.line, static_cast<ui32>(source[position.line].size() - 1)}, 1}, "", Type::NewLine});
+            tokens.push_back({{{position.line, static_cast<ui32>(source[position.line].size() - 1)}, 1}, "\n", Type::NewLine});
         position = new_position;
     }
 

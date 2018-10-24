@@ -15,8 +15,9 @@ int main() {
     //std::vector<std::string> source = vcrate::vasm::read_file("test/test0.vasm");
     std::vector<std::string> source {
         "mov",
-        "mov"
-
+        "mov %A",
+        "mov %A, %PC",
+        "mov %A, %F, %SP",
     };
 
     for(auto& s : source)
@@ -24,7 +25,7 @@ int main() {
 
     auto res = vcrate::vasm::lexer::tokenize(source);
     if(auto err = res.get_if_error(); err) {
-        err->report_error(std::cerr, source);
+        err->report_error(std::cerr, source) << '\n';
         return 1;
     } else {
         for(auto token : res.get_result()) {
@@ -38,7 +39,7 @@ int main() {
     auto res_ = vcrate::vasm::parser::parse(res.get_result());
     std::cout << "Finished!\n";
     if(auto err = res_.get_if_error(); err) {
-        err->report_error(std::cerr, source);
+        err->report_error(std::cerr, source) << '\n';
         return 1;
     } else {
         for(auto& statement : res_.get_result()) {

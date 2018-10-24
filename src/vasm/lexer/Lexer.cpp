@@ -313,6 +313,9 @@ Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Positio
 
     }
 
+    if (token.content.empty())
+        return Result<TokenPos>::error({ Error::Type::LexInvalidNumber, token.location });
+
     return Result<TokenPos>::success({ token, position });
 }
 
@@ -337,6 +340,7 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
 
         case ';':
             return make_token(source, {position, static_cast<ui32>(source[position.line].size()) - position.character}, Type::Comment);
+            
         case ',':
             return make_token(source, { position, 1 }, Type::Comma);
 
@@ -353,12 +357,18 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
             return make_token(source, { position, 1 }, Type::Div);
 
         case '*':
+            if (at(source, move_position(source, position)) == '*')
+                return make_token(source, { position, 2 }, Type::Exp);
             return make_token(source, { position, 1 }, Type::Mult);
 
         case '|':
+            if (at(source, move_position(source, position)) == '|')
+                return make_token(source, { position, 2 }, Type::OrLogic);
             return make_token(source, { position, 1 }, Type::Or);
 
         case '&':
+            if (at(source, move_position(source, position)) == '&')
+                return make_token(source, { position, 2 }, Type::AndLogic);
             return make_token(source, { position, 1 }, Type::And);
 
         case '^':
@@ -368,13 +378,34 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
             return make_token(source, { position, 1 }, Type::Neg);
 
         case '!':
+            if (at(source, move_position(source, position)) == '=')
+                return make_token(source, { position, 2 }, Type::Neq);
             return make_token(source, { position, 1 }, Type::Not);
 
         case '<':
+            if (at(source, move_position(source, position)) == '=')
+                return make_token(source, { position, 2 }, Type::Leqt);
+            if (at(source, move_position(source, position)) == '<') {
+                if (at(source, move_position(source, position, 2)) == '<')
+                    return make_token(source, { position, 3 }, Type::RotateL);
+                return make_token(source, { position, 2 }, Type::ShiftL);
+            }
             return make_token(source, { position, 1 }, Type::Lt);
 
         case '>':
+            if (at(source, move_position(source, position)) == '=')
+                return make_token(source, { position, 2 }, Type::Geqt);
+            if (at(source, move_position(source, position)) == '>') {
+                if (at(source, move_position(source, position, 2)) == '>')
+                    return make_token(source, { position, 3 }, Type::RotateR);
+                return make_token(source, { position, 2 }, Type::ShiftR);
+            }
             return make_token(source, { position, 1 }, Type::Gt);
+
+        case '=':
+            if (at(source, move_position(source, position)) == '=')
+                return make_token(source, { position, 2 }, Type::Eq);
+            break;
 
         case '[':
             return make_token(source, { position, 1 }, Type::OpenBracket);

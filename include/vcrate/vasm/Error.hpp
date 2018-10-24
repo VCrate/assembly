@@ -12,6 +12,7 @@ struct Error {
     enum class Type {
         LexUnknownCharacter,
         LexUnknownEscapeSequence,
+        LexInvalidNumber,
         Internal
     };
 

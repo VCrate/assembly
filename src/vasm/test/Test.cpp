@@ -24,7 +24,7 @@ std::string format_token(lexer::Token const& token) {
 
 std::string format_lexer_result(lexer::LexerResult const& res) {
     if(auto* error = res.get_if_error(); error) {
-        return format_location(error->location) + std::string{ to_string(error->type) };
+        return format_location(error->location) + " " + std::string{ to_string(error->type) };
     }
 
     std::string str = "[";

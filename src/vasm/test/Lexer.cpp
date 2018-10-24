@@ -87,6 +87,13 @@ TEST(LEXER) {
         TOKEN(0, 0, 2, "92", Dec),
         TOKEN(0, 2, 1, "\n", NewLine)
     }));
+    LEXER_TEST(as_source("9\n2"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, "9", Dec),
+        TOKEN(0, 1, 1, "\n", NewLine),
+        TOKEN(1, 0, 1, "2", Dec),
+        TOKEN(1, 1, 1, "\n", NewLine)
+    }));
+    LEXER_TEST(as_source("0d"), lexer::LexerResult::error({Error::Type::LexInvalidNumber, {{0, 0}, 2}}));
 
     CASE("Token Bin");
     LEXER_TEST(as_source("0b10"), lexer::LexerResult::success({
@@ -158,6 +165,11 @@ TEST(LEXER) {
     LEXER_TEST(as_source("**"), lexer::LexerResult::success({
         TOKEN(0, 0, 2, "**", Exp),
         TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+    LEXER_TEST(as_source("****"), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "**", Exp),
+        TOKEN(0, 2, 2, "**", Exp),
+        TOKEN(0, 4, 1, "\n", NewLine)
     }));
 
     CASE("Token ShiftL");

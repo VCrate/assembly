@@ -64,6 +64,8 @@ std::string_view to_string(Error::Type const& type) {
             return "Unknown character";
         case Error::Type::LexUnknownEscapeSequence:
             return "Invalid escape sequence in string";
+        case Error::Type::LexInvalidNumber:
+            return "Invalid number format";
         case Error::Type::Internal:
         default:
             return "Internal error";
@@ -74,6 +76,7 @@ Error::TypeInfo get_type_info(Error::Type type) {
     switch(type) {
         case Error::Type::LexUnknownCharacter:
         case Error::Type::LexUnknownEscapeSequence:
+        case Error::Type::LexInvalidNumber:
             return {type, Error::TypeInfo::Category::Lexical};
 
         case Error::Type::Internal:

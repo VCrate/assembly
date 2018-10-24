@@ -62,9 +62,11 @@ constant :=
 ;
 
 constant_term :=
-    [ unary_op ] number
-|   [ unary_op ] ident
-|   [ unary_op ] "[" ident "]"
+    number
+|   ident
+|   "[" ident "]"
+|   unary_op constant_term
+|   "(" constant ")"
 ;
 
 unary_op :=

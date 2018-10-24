@@ -2,6 +2,8 @@
 
 namespace vcrate::vasm::parser {
 
+UnaryOperation::UnaryOperation(Type type, std::unique_ptr<Constant> value) : type(type), value(std::move(value)) {}
+
 std::string UnaryOperation::to_string() const {
     std::string op;
     switch(type) {
@@ -10,7 +12,7 @@ std::string UnaryOperation::to_string() const {
         case UnaryOperation::Type::LogicalNot:  op = "! ";   break;
         default:                                op = "??? "; break;
     }
-    return "BINOP{ " + op + value->to_string() + " }";
+    return "UNOP{ " + op + value->to_string() + " }";
 }
 
 }

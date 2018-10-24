@@ -18,6 +18,7 @@ int main() {
         "mov %A",
         "mov %A, %PC",
         "mov %A, %F, %SP",
+        "mov 0xFF, test, 5, ~0o2",
     };
 
     for(auto& s : source)

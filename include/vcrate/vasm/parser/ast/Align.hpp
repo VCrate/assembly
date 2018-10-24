@@ -9,6 +9,8 @@ namespace vcrate::vasm::parser {
 class Align : public Directive {
 public:
 
+    std::string to_string() const override;
+
     std::string raw_value;
 
 };

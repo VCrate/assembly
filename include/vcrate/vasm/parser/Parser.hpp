@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vcrate/vasm/Result.hpp>
-#include <vcrate/vasm/parser/ast/Statement.hpp>
 #include <vcrate/vasm/lexer/Token.hpp>
+
+#include <vcrate/vasm/parser/ast/Statement.hpp>
 
 #include <vector>
 #include <memory>

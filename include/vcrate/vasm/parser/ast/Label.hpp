@@ -9,6 +9,8 @@ namespace vcrate::vasm::parser {
 class Label : public Statement {
 public:
 
+    std::string to_string() const override;
+
     std::string name;
 
 };

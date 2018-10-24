@@ -9,6 +9,8 @@ namespace vcrate::vasm::parser {
 class UnaryOperation : public Constant {
 public:
 
+    std::string to_string() const override;
+
     enum class Type {
         Not,
         LogicalNot,

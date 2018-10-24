@@ -30,6 +30,9 @@ public:
     static Result<T> success(T const& t) {
         return Result<T> { t };
     }
+    static Result<T> success(T&& t) {
+        return Result<T> { std::move(t) };
+    }
 
     static Result<T> error(Error const& e) {
         return Result<T> { e };
@@ -39,6 +42,7 @@ private:
 
     Result<T>(Error const& e) : result(e) {};
     Result<T>(T const& t) : result(t) {};
+    Result<T>(T&& t) : result(std::move(t)) {};
 
     std::variant<T, Error> result;
 };

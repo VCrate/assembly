@@ -9,6 +9,8 @@ namespace vcrate::vasm::parser {
 class BinaryOperation : public Constant {
 public:
 
+    std::string to_string() const override;
+
     enum class Type {
         Add,
         Sub,
@@ -24,7 +26,6 @@ public:
         And,
         LogicalAnd,
         Xor,
-        LogicalXor,
         Exp,
         Less,
         LessEquals,

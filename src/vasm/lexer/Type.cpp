@@ -42,6 +42,8 @@ std::string_view to_string(Type type) {
         case Type::Geqt: return "Geqt";
         case Type::CloseBracket: return "CloseBracket"; 
         case Type::OpenBracket: return "OpenBracket";
+        case Type::CloseParen: return "CloseParen"; 
+        case Type::OpenParen: return "OpenParen";
         case Type::Comment: return "Comment";
         case Type::NewLine: return "NewLine";
     }

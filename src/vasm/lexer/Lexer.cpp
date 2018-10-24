@@ -365,13 +365,28 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
             return make_token(source, { position, 1 }, Type::Xor);
 
         case '~':
+            return make_token(source, { position, 1 }, Type::Neg);
+
+        case '!':
             return make_token(source, { position, 1 }, Type::Not);
+
+        case '<':
+            return make_token(source, { position, 1 }, Type::Lt);
+
+        case '>':
+            return make_token(source, { position, 1 }, Type::Gt);
 
         case '[':
             return make_token(source, { position, 1 }, Type::OpenBracket);
 
         case ']':
             return make_token(source, { position, 1 }, Type::CloseBracket);
+
+        case '(':
+            return make_token(source, { position, 1 }, Type::OpenParen);
+
+        case ')':
+            return make_token(source, { position, 1 }, Type::CloseParen);
 
         default:
             break;

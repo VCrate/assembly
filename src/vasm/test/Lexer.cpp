@@ -263,14 +263,26 @@ TEST(LEXER) {
     }));
 
     CASE("Token CloseBracket");
-    LEXER_TEST(as_source(")"), lexer::LexerResult::success({
-        TOKEN(0, 0, 1, ")", CloseBracket),
+    LEXER_TEST(as_source("]"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, "]", CloseBracket),
         TOKEN(0, 1, 1, "\n", NewLine)
     }));
 
     CASE("Token OpenBracket");
+    LEXER_TEST(as_source("["), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, "[", OpenBracket),
+        TOKEN(0, 1, 1, "\n", NewLine)
+    }));
+
+    CASE("Token CloseParen");
+    LEXER_TEST(as_source(")"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, ")", CloseParen),
+        TOKEN(0, 1, 1, "\n", NewLine)
+    }));
+
+    CASE("Token OpenParen");
     LEXER_TEST(as_source("("), lexer::LexerResult::success({
-        TOKEN(0, 0, 1, "(", OpenBracket),
+        TOKEN(0, 0, 1, "(", OpenParen),
         TOKEN(0, 1, 1, "\n", NewLine)
     }));
 

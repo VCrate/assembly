@@ -26,6 +26,7 @@ enum class Type {
     Eq, Neq, Gt, Lt, Geqt, Leqt,
 
     CloseBracket, OpenBracket,
+    CloseParen, OpenParen,
 
     Comment, NewLine
 };

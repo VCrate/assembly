@@ -16,9 +16,14 @@ enum class Type {
     Directive,
     DB, DW, DD,
 
-    Plus, Minus, Div, Mult, Mod, 
+    // Arithmetic
+    Plus, Minus, Div, Mult, Mod, Exp,
     ShiftL, ShiftR, RotateL, RotateR,
-    Or, And, Xor, Not,
+    Or, And, Xor, Neg,
+
+    //Logical
+    Not, OrLogic, AndLogic, 
+    Eq, Neq, Gt, Lt, Geqt, Leqt,
 
     CloseBracket, OpenBracket,
 

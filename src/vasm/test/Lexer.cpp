@@ -154,6 +154,12 @@ TEST(LEXER) {
         TOKEN(0, 1, 1, "\n", NewLine)
     }));
 
+    CASE("Token Exp");
+    LEXER_TEST(as_source("**"), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "**", Exp),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
     CASE("Token ShiftL");
     LEXER_TEST(as_source("<<"), lexer::LexerResult::success({
         TOKEN(0, 0, 2, "<<", ShiftL),
@@ -196,9 +202,63 @@ TEST(LEXER) {
         TOKEN(0, 1, 1, "\n", NewLine)
     }));
 
+    CASE("Token Neg");
+    LEXER_TEST(as_source("~"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, "~", Neg),
+        TOKEN(0, 1, 1, "\n", NewLine)
+    }));
+
     CASE("Token Not");
     LEXER_TEST(as_source("!"), lexer::LexerResult::success({
         TOKEN(0, 0, 1, "!", Not),
+        TOKEN(0, 1, 1, "\n", NewLine)
+    }));
+
+    CASE("Token OrLogic");
+    LEXER_TEST(as_source("||"), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "||", OrLogic),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
+    CASE("Token AndLogic");
+    LEXER_TEST(as_source("&&"), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "&&", AndLogic),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
+    CASE("Token Leqt");
+    LEXER_TEST(as_source("<="), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "<=", Leqt),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
+    CASE("Token Geqt");
+    LEXER_TEST(as_source(">="), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, ">=", Geqt),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
+    CASE("Token Neq");
+    LEXER_TEST(as_source("!="), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "!=", Neq),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
+    CASE("Token Eq");
+    LEXER_TEST(as_source("=="), lexer::LexerResult::success({
+        TOKEN(0, 0, 2, "==", Eq),
+        TOKEN(0, 2, 1, "\n", NewLine)
+    }));
+
+    CASE("Token Lt");
+    LEXER_TEST(as_source("<"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, "<", Lt),
+        TOKEN(0, 1, 1, "\n", NewLine)
+    }));
+
+    CASE("Token Gt");
+    LEXER_TEST(as_source(">"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, ">", Gt),
         TOKEN(0, 1, 1, "\n", NewLine)
     }));
 

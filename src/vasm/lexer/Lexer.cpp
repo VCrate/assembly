@@ -47,10 +47,6 @@ LexerResult tokenize(std::vector<std::string> const& source) {
             return Result<std::vector<Token>>::error(res.get_error());
         }
         auto&&[token, pos] = res.get_result();
-
-        if (token.type == Type::EndOfFile)
-            break;
-
         if (token.type != Type::Comment)
             tokens.emplace_back(std::move(token));
 

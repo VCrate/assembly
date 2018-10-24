@@ -51,6 +51,6 @@ struct Test {
     test_function_ ## __name(test_ ## __name)
 
 #define REPORT_TEST(__name) \
-    RUN_TEST(__name), test_ ## __name .report(std::cerr)
+    (RUN_TEST(__name), test_ ## __name .report(std::cerr))
 
 }

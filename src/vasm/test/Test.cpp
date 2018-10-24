@@ -27,7 +27,7 @@ std::string format_lexer_result(lexer::LexerResult const& res) {
         return format_location(error->location) + std::string{ to_string(error->type) };
     }
 
-    std::string str;
+    std::string str = "[";
     bool first = true;
     for(auto const& t : res.get_result()) {
         if (!first)
@@ -36,7 +36,7 @@ std::string format_lexer_result(lexer::LexerResult const& res) {
 
         str += format_token(t);
     }
-    return str;
+    return str + "]";
 }
 
 bool operator == (lexer::Position const& lhs, lexer::Position const& rhs) {
@@ -64,12 +64,16 @@ bool operator == (lexer::LexerResult const& lhs, lexer::LexerResult const& rhs) 
 
     auto lres = lhs.get_result();
     auto rres = rhs.get_result();
+    std::cerr << lres.size() << ", " << rres.size();
 
-    return lres.size() == rres.size() && std::equal(std::begin(lres), std::end(lres), std::begin(rres), [] (auto const& l, auto const& r) { return l == r; });
+    bool b = lres.size() == rres.size() && std::equal(std::begin(lres), std::end(lres), std::begin(rres), [] (auto const& l, auto const& r) { return l == r; });
+    std::cout << " => " << b << '\n';
+    return b;
 }
 
 void TestCase::lexer_test(std::vector<std::string> const& source, lexer::LexerResult const& expected) {
     TestResult res;
+    res.test = "[";
     bool first = true;
     for(auto const& s : source) {
         if (!first)
@@ -78,12 +82,14 @@ void TestCase::lexer_test(std::vector<std::string> const& source, lexer::LexerRe
 
         res.test += "{" + s.substr(0, s.size() - 1) + "}";
     }
-
+    res.test += "]";
     res.expect = format_lexer_result(expected);
 
     auto tokens_res = lexer::tokenize(source);
-    if (!(expected == tokens_res))
+    if (!(expected == tokens_res)) {
+        std::cerr << "Failed on " << (source.empty() ? "..." : source[0].c_str()) << '\n';
         res.but = format_lexer_result(tokens_res);
+    }
 
     results.push_back(res);
 }

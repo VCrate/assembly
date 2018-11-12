@@ -12,8 +12,8 @@
 
 int main() {
 
-    //std::vector<std::string> source = vcrate::vasm::read_file("test/test0.vasm");
-    std::vector<std::string> source {
+    std::vector<std::string> source = vcrate::vasm::read_file("test/hello.vasm");
+    /*std::vector<std::string> source {
         "mov",
         "mov %A",
         "mov %A, %PC",
@@ -35,10 +35,10 @@ int main() {
         "dw 0x55",
         "# align 0x4",
         "lea %A, [%B + (24 & 0b0101)]"
-    };
+    };*/
 
-    for(auto& s : source)
-        s.push_back('\n');
+    /*for(auto& s : source)
+        s.push_back('\n');*/
 
     auto res = vcrate::vasm::lexer::tokenize(source);
     if(auto err = res.get_if_error(); err) {

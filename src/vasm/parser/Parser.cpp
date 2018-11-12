@@ -14,6 +14,7 @@
 #include <vcrate/vasm/parser/ast/Number.hpp>
 #include <vcrate/vasm/parser/ast/Register.hpp>
 #include <vcrate/vasm/parser/ast/Statement.hpp>
+#include <vcrate/vasm/parser/ast/String.hpp>
 #include <vcrate/vasm/parser/ast/Term.hpp>
 #include <vcrate/vasm/parser/ast/UnaryOperation.hpp>
 
@@ -119,6 +120,7 @@ Result<std::unique_ptr<Constant>> parse_constant(std::vector<lexer::Token> const
                 case lexer::Type::Geqt:     op = BinaryOperation::Type::GreaterEquals; break;
                 case lexer::Type::Eq:       op = BinaryOperation::Type::Equals; break;
                 case lexer::Type::Neq:      op = BinaryOperation::Type::Unequals; break;
+                default: std::exit(666); break;
             }
 
             auto op_pred = BinaryOperation::precedence_of(op);
@@ -156,6 +158,7 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
                 case lexer::Type::Neg:   op = UnaryOperation::Type::Not;        break;
                 case lexer::Type::Not:   op = UnaryOperation::Type::LogicalNot; break;
                 case lexer::Type::Minus: op = UnaryOperation::Type::Neg;        break;
+                default: std::exit(666); break;
             }
 
             auto constant = parse_constant_term(tokens, pos);
@@ -194,6 +197,13 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
         }
     }
     {
+        auto token = eat(tokens, pos, lexer::Type::String);
+        if (token.is_success() && token.get_result().content.size() == 1) {
+            ref_pos = pos;
+            return result_t::success(std::make_unique<String>(token.get_result().content));
+        }
+    }
+    {
         auto token = eat_one_of(tokens, pos, {lexer::Type::Bin, lexer::Type::Oct, lexer::Type::Dec, lexer::Type::Hex});
         if (token.is_success()) {
             ui8 base;
@@ -202,6 +212,7 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
                 case lexer::Type::Oct:   base = 8;  break;
                 case lexer::Type::Dec:   base = 10; break;
                 case lexer::Type::Hex:   base = 16; break;
+                default: std::exit(666); break;
             }
             ref_pos = pos;
             return result_t::success(std::make_unique<Number>(token.get_result().content, base));
@@ -226,7 +237,7 @@ Result<bytecode::Operations> parse_operation(std::vector<lexer::Token> const& to
     try {
         auto ope = bytecode::OpDefinition::get(token.get_result().content).ope;
         return result_t::success(ope);
-    } catch(std::out_of_range) {
+    } catch(std::out_of_range const&) {
         return result_t::error({ Error::Type::Internal, token.get_result().location });
     }
 }
@@ -337,26 +348,38 @@ Result<std::unique_ptr<Statement>> parse_data(std::vector<lexer::Token> const& t
     std::size_t pos = ref_pos;
 
     auto token = eat_one_of(tokens, pos, {lexer::Type::DB, lexer::Type::DD, lexer::Type::DW});
-    if (auto err = token.get_if_error()) { return result_t::error(*err); }
+    if (auto err = token.get_if_error()) return result_t::error(*err); 
 
     std::size_t size;
     switch (token.get_result().type) {
         case lexer::Type::DB:   size = 1; break;
         case lexer::Type::DW:   size = 2; break;
         case lexer::Type::DD:   size = 4; break;
+        default: std::exit(666); break;
     }
 
     std::vector<std::unique_ptr<Constant>> constants;
 
-    auto constant = parse_constant(tokens, pos);
-    if (auto err = constant.get_if_error()) { return result_t::error(*err); }
-
-    constants.emplace_back(std::move(constant.get_result()));
+    {
+        auto constant = parse_constant(tokens, pos);
+        if (constant.is_success()) {
+            constants.emplace_back(std::move(constant.get_result()));
+        } else {
+            auto string = eat(tokens, pos, lexer::Type::String);
+            if (auto err = string.get_if_error()) return result_t::error(*err); 
+            constants.emplace_back(std::make_unique<String>(string.get_result().content));
+        }
+    }
 
     while(eat(tokens, pos, lexer::Type::Comma).is_success()) {
         auto constant = parse_constant(tokens, pos);
-        if (auto err = constant.get_if_error()) return result_t::error(*err);
-        constants.emplace_back(std::move(constant.get_result()));
+        if (constant.is_success()) {
+            constants.emplace_back(std::move(constant.get_result()));
+        } else {
+            auto string = eat(tokens, pos, lexer::Type::String);
+            if (auto err = string.get_if_error()) return result_t::error(*err); 
+            constants.emplace_back(std::make_unique<String>(string.get_result().content));
+        }
     }
     ref_pos = pos;
     return result_t::success(std::make_unique<Data>(size, std::move(constants)));
@@ -393,6 +416,7 @@ Result<std::unique_ptr<Statement>> parse_directive(std::vector<lexer::Token> con
             case lexer::Type::Oct:   base = 8;  break;
             case lexer::Type::Dec:   base = 10; break;
             case lexer::Type::Hex:   base = 16; break;
+            default: std::exit(666); break;
         }
         return result_t::success(std::make_unique<Align>(Number(num.get_result().content, base)));
     }
@@ -437,11 +461,11 @@ Result<std::unique_ptr<Statement>> parse_statement(std::vector<lexer::Token> con
     }
 
     lexer::Location location;
-    if (tokens.empty()) {
-        location = {{0, 0}, 1};
-    } else {
+    if (ref_pos >= tokens.size()) {
         auto const& last = tokens.back().location;
         location = {{last.line, last.character + last.lenght}, 1};
+    } else {
+        location = tokens[ref_pos].location;
     }
 
     return result_t::error({ Error::Type::Internal, location });

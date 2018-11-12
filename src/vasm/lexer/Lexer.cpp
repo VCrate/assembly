@@ -164,6 +164,7 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
                 case '\r':
                 case '\t':
                 case '\v':
+                case '\0':
                     break;
                 case '\\':
                     content += '\t';
@@ -188,6 +189,9 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
                     break;
                 case 'v':
                     content += '\v';
+                    break;
+                case '0':
+                    content += '\0';
                     break;
                 default:
                     if (c == quote)

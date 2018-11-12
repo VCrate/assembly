@@ -2,10 +2,12 @@
     VASM Grammar
 *)
 
+(* DONE *)
 program :=
     program_statement *
 ;
 
+(* DONE *)
 program_statement :=
     data
 |   label
@@ -15,28 +17,34 @@ program_statement :=
 | "\n"
 ;
 
+(* DONE *)
 data := 
     "db" [constant { ", " constant } * ]
     "dw" [constant { ", " constant } * ]
     "dd" [constant { ", " constant } * ]
 ;
 
+(* DONE *)
 comment :=
     ";" .*
 ;
 
+(* DONE *)
 label :=
     ident ':'
 ;
 
+(* DONE *)
 directive :=
     '#' directive_command
 ;
 
+(* DONE *)
 directive_command :=
     "align" number
 ;
 
+(* DONE *)
 statement :=
     command [ argument [ "," argument ] ]
 ;
@@ -50,31 +58,35 @@ command :=
     ...
 ;
 
+(* DONE *)
 argument := 
     constant
 |   register
 |   "[" register [ "+" constant ] "]"
-|   "[" constant "+" register "]"
 ;
 
+(* DONE *)
 constant :=
     constant_term [ binary_op constant ]
 ;
 
+(* DONE *)
 constant_term :=
     number
 |   ident
-|   "[" ident "]"
+|   "[" constant "]"
 |   unary_op constant_term
 |   "(" constant ")"
 ;
 
+(* DONE *)
 unary_op :=
     "!"
 |   "~"
 |   "-"
 ;
 
+(* DONE *)
 binary_op :=
     "+"
 |   "-"
@@ -99,10 +111,12 @@ binary_op :=
 |   "!="
 ;
 
+(* DONE *)
 ident :=
     (a-zA-Z_) (a-zA-Z0-9_) *
 ;
 
+(* DONE *)
 number :=
     "0b" (01) +
 |   "0o" (0-7) +
@@ -110,6 +124,7 @@ number :=
 |   "0x" (0-9a-fA-F) +
 ;
 
+(* DONE *)
 register :=
     "%A"
 |   "%B"

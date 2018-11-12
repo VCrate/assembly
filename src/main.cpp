@@ -18,7 +18,23 @@ int main() {
         "mov %A",
         "mov %A, %PC",
         "mov %A, %F, %SP",
-        "mov 0xFF, test, 5, ~0o2",
+        "mov 0xFF + 22 >> abc, test, 5, ~0o2",
+        "mov 0xFF + (22 >> abc), [[4 ** 5 % 5] ^ 8 && me]",
+        "mov 1 + 2 * 3",
+        "mov 1 + 2 + 3",
+        "mov 1 + 2 | 3",
+        "mov 1 ** 2 * 3",
+        "mov 1 && 2 | 3",
+        "mov [1]",
+        "mov [1 + 1]",
+        "inc [%PC + 1]",
+        "mov [%A]",
+        "label:",
+        "db 1, [42], ok, [test ** here]",
+        "dd l",
+        "dw 0x55",
+        "# align 0x4",
+        "lea %A, [%B + (24 & 0b0101)]"
     };
 
     for(auto& s : source)

@@ -2,8 +2,10 @@
 
 namespace vcrate::vasm::parser {
 
+Align::Align(Number const& number) : number(number) {}
+
 std::string Align::to_string() const {
-    return "ALIGN{ " + raw_value + " }";
+    return "ALIGN{ " + number.to_string() + " }";
 }
 
 }

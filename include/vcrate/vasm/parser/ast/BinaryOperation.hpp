@@ -9,8 +9,6 @@ namespace vcrate::vasm::parser {
 class BinaryOperation : public Constant {
 public:
 
-    std::string to_string() const override;
-
     enum class Type {
         Add,
         Sub,
@@ -35,8 +33,15 @@ public:
         Unequals
     };
 
-    std::unique_ptr<Constant> lhs, rhs;
+    BinaryOperation(std::unique_ptr<Constant> lhs, Type type, std::unique_ptr<Constant> rhs);
+
+    std::string to_string() const override;
+
+    using precedence_t = unsigned;
+    static precedence_t precedence_of(Type type);
+
     Type type;
+    std::unique_ptr<Constant> lhs, rhs;
 
 };
 

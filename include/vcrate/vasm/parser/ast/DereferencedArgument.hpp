@@ -11,6 +11,8 @@ namespace vcrate::vasm::parser {
 class DereferencedArgument : public Argument {
 public:
 
+    DereferencedArgument(Register reg, std::unique_ptr<Constant> displacement);
+
     std::string to_string() const override;
 
     Register reg;

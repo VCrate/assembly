@@ -11,6 +11,8 @@ namespace vcrate::vasm::parser {
 class Data : public Statement {
 public:
 
+    Data(std::size_t size, std::vector<std::unique_ptr<Constant>> constants);
+
     std::string to_string() const override;
 
     std::size_t size;

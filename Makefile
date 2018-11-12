@@ -193,7 +193,7 @@ _EXE_DIR := $(addprefix $(BUILD_EXE_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
 _SHARED_DIR := $(addprefix $(BUILD_SHARED_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
 _STATIC_DIR := $(addprefix $(BUILD_STATIC_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
 
-_BUILD_DIR := $(_EXE_DIR) $(_SHARED_DIR) $(_STATIC_DIR)
+_BUILD_DIR := $(sort $(_EXE_DIR) $(_SHARED_DIR) $(_STATIC_DIR))
 
 #####
 ##### OBJECT FILES

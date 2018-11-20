@@ -39,7 +39,7 @@ int main() {
 
     /*for(auto& s : source)
         s.push_back('\n');*/
-
+/*
     auto res = vcrate::vasm::lexer::tokenize(source);
     if(auto err = res.get_if_error(); err) {
         err->report_error(std::cerr, source) << '\n';
@@ -62,5 +62,90 @@ int main() {
         for(auto& statement : res_.get_result()) {
             std::cout << statement->to_string() << '\n';
         }
+    }*/
+
+    vcrate::vasm::lexer::ScatteredLocation ls;
+
+    std::cout << "[0] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
     }
+    std::cout << '\n';
+
+    ls.extends({1, 5, 3});
+    ls.extends({1, 9, 3});
+
+    std::cout << "[1] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({1, 10, 5});
+
+    std::cout << "[2] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({0, 1, 15});
+
+    std::cout << "[3] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({1, 4, 6});
+
+    std::cout << "[4] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({1, 6, 6});
+
+    std::cout << "[5] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({2, 6, 6});
+
+    std::cout << "[6] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({2, 6, 6});
+
+    std::cout << "[7] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({2, 7, 6});
+
+    std::cout << "[8] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
+
+    ls.extends({3, 0, 2});
+    ls.extends({3, 3, 2});
+    ls.extends({3, 6, 2});
+    ls.extends({3, 9, 3});
+    ls.extends({3, 2, 8});
+
+    std::cout << "[9] ";
+    for(auto const& l : ls.locations) {
+        std::cout << l.line << ":" << l.character << "@" << l.lenght << ", ";
+    }
+    std::cout << '\n';
 }

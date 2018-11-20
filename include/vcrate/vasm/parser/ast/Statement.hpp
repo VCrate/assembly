@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+#include <vcrate/vasm/lexer/Location.hpp>
 
 namespace vcrate::vasm::parser {
 

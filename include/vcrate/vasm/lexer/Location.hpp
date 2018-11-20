@@ -32,6 +32,7 @@ struct Location : Position {
 struct ScatteredLocation {
 
     void extends(Location const& location);
+    void extends(ScatteredLocation const& scattered_location);
 
     std::vector<Location> locations;
 

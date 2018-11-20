@@ -24,7 +24,7 @@ std::string format_token(lexer::Token const& token) {
 
 std::string format_lexer_result(lexer::LexerResult const& res) {
     if(auto* error = res.get_if_error(); error) {
-        return format_location(error->location) + " " + std::string{ to_string(error->type) };
+        return format_location(error->locations.locations[0]) + " " + std::string{ to_string(error->type) };
     }
 
     std::string str = "[";
@@ -59,7 +59,7 @@ bool operator == (lexer::LexerResult const& lhs, lexer::LexerResult const& rhs) 
         auto lerr = lhs.get_error();
         auto rerr = rhs.get_error();
 
-        return lerr.location == rerr.location && lerr.type == rerr.type;
+        return lerr.locations.locations[0] == rerr.locations.locations[0] && lerr.type == rerr.type;
     }
 
     auto lres = lhs.get_result();

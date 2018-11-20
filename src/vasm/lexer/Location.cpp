@@ -86,6 +86,12 @@ Location merge(Location const& lhs, Location const& rhs, Overlap const& overlap)
     return lhs;
 }
 
+void ScatteredLocation::extends(ScatteredLocation const& scattered_location) {
+    for(auto const& location : scattered_location.locations) {
+        extends(location);
+    } 
+}
+
 void ScatteredLocation::extends(Location const& location) {
     if (locations.empty()) {
         locations.push_back(location);

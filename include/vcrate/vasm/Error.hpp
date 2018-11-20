@@ -26,7 +26,7 @@ struct Error {
     };
 
     Type type;
-    lexer::Location location;
+    lexer::ScatteredLocation locations;
 
     std::ostream& report_error(std::ostream& os, std::vector<std::string> const& source, bool use_color = true) const;
 

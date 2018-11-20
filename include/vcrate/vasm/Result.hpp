@@ -38,6 +38,14 @@ public:
         return Result<T> { e };
     }
 
+    static Result<T> error(Error::Type type, lexer::ScatteredLocation const& locations) {
+        return Result<T> { Error{ type, locations }};
+    }
+
+    static Result<T> error(Error::Type type, std::vector<lexer::Location> const& locations) {
+        return Result<T> { Error{ type, { locations }}};
+    }
+
 private:
 
     Result<T>(Error const& e) : result(e) {};

@@ -120,7 +120,7 @@ Type ident_type(std::string content) {
 Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
-        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1}});
+        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, lexer::ScatteredLocation{{{position, 1}}}});
 
     Location location { position, 1 };
     position = move_position(source, position);
@@ -137,7 +137,7 @@ Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position
 Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c == '"' || c == '\''))
-        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1}});
+        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {{{position, 1}}}});
 
     char quote = c;
 
@@ -201,7 +201,7 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
                         location.line = position.line;
                         location.character = position.character - 1;
                         location.lenght = 2;
-                        return Result<TokenPos>::error({ Error::Type::LexUnknownEscapeSequence, location });
+                        return Result<TokenPos>::error({ Error::Type::LexUnknownEscapeSequence, {{ location }}});
                     }
                     break;
             }
@@ -255,7 +255,7 @@ Result<TokenPos> tokenize_register_or_mod(std::vector<std::string> const& source
 Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c >= '0' && c <= '9'))
-        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1}});
+        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {{{position, 1}}}});
 
     Token token;
     token.type = Type::Dec;
@@ -318,7 +318,7 @@ Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Positio
     }
 
     if (token.content.empty())
-        return Result<TokenPos>::error({ Error::Type::LexInvalidNumber, token.location });
+        return Result<TokenPos>::error({ Error::Type::LexInvalidNumber, {{ token.location }}});
 
     return Result<TokenPos>::success({ token, position });
 }
@@ -426,7 +426,7 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
         default:
             break;
     }
-    return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {position, 1} });
+    return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {{{position, 1}}} });
 }
 
 }

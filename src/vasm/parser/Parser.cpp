@@ -28,7 +28,7 @@ Result<lexer::Token> eat(std::vector<lexer::Token> const& tokens, std::size_t& p
             ++pos;
             return result_t::success(token);
         }
-        return result_t::error( {Error::Type::Internal, token.location });
+        return result_t::error(Error::Type::Internal, { token.location });
     }
 
     lexer::Location location;
@@ -39,7 +39,7 @@ Result<lexer::Token> eat(std::vector<lexer::Token> const& tokens, std::size_t& p
         location = {{last.line, last.character + last.lenght}, 1};
     }
 
-    return result_t::error({ Error::Type::Internal, location });
+    return result_t::error(Error::Type::Internal, { location });
 }
 
 Result<lexer::Token> eat_one_of(std::vector<lexer::Token> const& tokens, std::size_t& pos, std::initializer_list<lexer::Type> types) {
@@ -59,7 +59,7 @@ Result<lexer::Token> eat_one_of(std::vector<lexer::Token> const& tokens, std::si
         location = {{last.line, last.character + last.lenght}, 1};
     }
 
-    return result_t::error({ Error::Type::Internal, location });
+    return result_t::error(Error::Type::Internal, { location });
 }
 
 Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> const& tokens, std::size_t& ref_pos);
@@ -123,8 +123,6 @@ Result<std::unique_ptr<Constant>> parse_constant(std::vector<lexer::Token> const
                 default: std::exit(666); break;
             }
 
-            //lhs.get_result()->tokens.push_back(token.get_result());
-
             auto op_pred = BinaryOperation::precedence_of(op);
             if (op_pred < pred) {
                 return std::move(lhs);
@@ -134,14 +132,28 @@ Result<std::unique_ptr<Constant>> parse_constant(std::vector<lexer::Token> const
                 auto rhs = parse_constant(tokens, ref_pos, op_pred + 1);
                 if (rhs.is_error())
                     return result_t::error(rhs.get_error());
-                lhs = result_t::success(std::make_unique<BinaryOperation>(std::move(lhs.get_result()), op, std::move(rhs.get_result())));
+                
+                auto bin = std::make_unique<BinaryOperation>(std::move(lhs.get_result()), op, std::move(rhs.get_result()));
+                
+                bin->locations.extends(bin->lhs->locations);
+                bin->locations.extends(token.get_result().location);
+                bin->locations.extends(bin->rhs->locations);
+
+                lhs = result_t::success(std::move(bin));
 
             } else {
                 ref_pos = pos;
                 auto rhs = parse_constant_term(tokens, ref_pos);
                 if (rhs.is_error())
                     return result_t::error(rhs.get_error());
-                lhs = result_t::success(std::make_unique<BinaryOperation>(std::move(lhs.get_result()), op, std::move(rhs.get_result())));
+
+                auto bin = std::make_unique<BinaryOperation>(std::move(lhs.get_result()), op, std::move(rhs.get_result()));
+                
+                bin->locations.extends(bin->lhs->locations);
+                bin->locations.extends(token.get_result().location);
+                bin->locations.extends(bin->rhs->locations);
+
+                lhs = result_t::success(std::move(bin));
             }
         } else {
             return std::move(lhs);
@@ -168,14 +180,15 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
             ref_pos = pos;
 
             auto res = std::make_unique<UnaryOperation>(op, std::move(constant.get_result()));
-            //res->tokens.push_back(token.get_result());
+            res->locations.extends(res->value->locations);
+            res->locations.extends(token.get_result().location);
 
             return result_t::success(std::move(res));
         }
     }
     {
-        auto token = eat(tokens, pos, lexer::Type::OpenBracket);
-        if (token.is_success()) {
+        auto opening_bracket = eat(tokens, pos, lexer::Type::OpenBracket);
+        if (opening_bracket.is_success()) {
             auto constant = parse_constant(tokens, pos);
             if (auto err = constant.get_if_error()) return result_t::error(*err);
             auto closing_bracket = eat(tokens, pos, lexer::Type::CloseBracket);
@@ -183,52 +196,55 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
             ref_pos = pos;
 
             auto res = std::make_unique<DereferencedConstant>(std::move(constant.get_result()));
-            //res->tokens.push_back(closing_bracket.get_result());
+            res->locations.extends(opening_bracket.get_result().location);
+            res->locations.extends(res->constant->locations);
+            res->locations.extends(closing_bracket.get_result().location);
 
             return result_t::success(std::move(res));
         }
     }
     {
-        auto token = eat(tokens, pos, lexer::Type::OpenParen);
-        if (token.is_success()) {
+        auto opening_paren = eat(tokens, pos, lexer::Type::OpenParen);
+        if (opening_paren.is_success()) {
             auto constant = parse_constant(tokens, pos);
             if (auto err = constant.get_if_error()) return result_t::error(*err);
-            auto closing_bracket = eat(tokens, pos, lexer::Type::CloseParen);
-            if (auto err = closing_bracket.get_if_error()) return result_t::error(*err);
+            auto closing_paren = eat(tokens, pos, lexer::Type::CloseParen);
+            if (auto err = closing_paren.get_if_error()) return result_t::error(*err);
             ref_pos = pos;
 
-            //constant.get_result()->tokens.push_back(closing_bracket.get_result());
+            constant.get_result()->locations.extends(opening_paren.get_result().location);
+            constant.get_result()->locations.extends(closing_paren.get_result().location);
 
             return std::move(constant);
         }
     }
     {
-        auto token = eat(tokens, pos, lexer::Type::Ident);
-        if (token.is_success()) {
+        auto ident = eat(tokens, pos, lexer::Type::Ident);
+        if (ident.is_success()) {
             ref_pos = pos;
 
-            auto res = std::make_unique<Ident>(token.get_result().content);
-            //res->tokens.push_back(token.get_result());
+            auto res = std::make_unique<Ident>(ident.get_result().content);
+            res->locations.extends(ident.get_result().location);
 
             return result_t::success(std::move(res));
         }
     }
     {
-        auto token = eat(tokens, pos, lexer::Type::String);
-        if (token.is_success() && token.get_result().content.size() == 1) {
+        auto string = eat(tokens, pos, lexer::Type::String);
+        if (string.is_success() && string.get_result().content.size() == 1) {
             ref_pos = pos;
 
-            auto res = std::make_unique<String>(token.get_result().content);
-            //res->tokens.push_back(token.get_result());
+            auto res = std::make_unique<String>(string.get_result().content);
+            res->locations.extends(string.get_result().location);
 
             return result_t::success(std::move(res));
         }
     }
     {
-        auto token = eat_one_of(tokens, pos, {lexer::Type::Bin, lexer::Type::Oct, lexer::Type::Dec, lexer::Type::Hex});
-        if (token.is_success()) {
+        auto num = eat_one_of(tokens, pos, {lexer::Type::Bin, lexer::Type::Oct, lexer::Type::Dec, lexer::Type::Hex});
+        if (num.is_success()) {
             ui8 base;
-            switch (token.get_result().type) {
+            switch (num.get_result().type) {
                 case lexer::Type::Bin:   base = 2;  break;
                 case lexer::Type::Oct:   base = 8;  break;
                 case lexer::Type::Dec:   base = 10; break;
@@ -237,8 +253,8 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
             }
             ref_pos = pos;
 
-            auto res = std::make_unique<Number>(token.get_result().content, base);
-            //res->tokens.push_back(token.get_result());
+            auto res = std::make_unique<Number>(num.get_result().content, base);
+            res->locations.extends(num.get_result().location);
 
             return result_t::success(std::move(res));
         }
@@ -250,25 +266,25 @@ Result<std::unique_ptr<Constant>> parse_constant_term(std::vector<lexer::Token> 
     else
         location = tokens.back().location;
 
-    return result_t::error({ Error::Type::Internal, location });
+    return result_t::error(Error::Type::Internal, { location });
 }
 
-Result<std::pair<bytecode::Operations, lexer::Token>> parse_operation(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
-    using result_t = Result<std::pair<bytecode::Operations, lexer::Token>>;
+Result<std::pair<bytecode::Operations, lexer::Location>> parse_operation(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
+    using result_t = Result<std::pair<bytecode::Operations, lexer::Location>>;
 
     auto token = eat(tokens, pos, lexer::Type::Ident);
     if (auto err = token.get_if_error()) return result_t::error(*err);
     
     try {
         auto ope = bytecode::OpDefinition::get(token.get_result().content).ope;
-        return result_t::success({ ope, token.get_result() });
+        return result_t::success({ ope, token.get_result().location });
     } catch(std::out_of_range const&) {
-        return result_t::error({ Error::Type::Internal, token.get_result().location });
+        return result_t::error(Error::Type::Internal, { token.get_result().location });
     }
 }
 
-Result<std::pair<Register, lexer::Token>> parse_register(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
-    using result_t = Result<std::pair<Register, lexer::Token>>;
+Result<std::pair<Register, lexer::Location>> parse_register(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
+    using result_t = Result<std::pair<Register, lexer::Location>>;
 
     auto reg = eat(tokens, pos, lexer::Type::Register);
     if (auto err = reg.get_if_error()) return result_t::error(*err);
@@ -276,24 +292,24 @@ Result<std::pair<Register, lexer::Token>> parse_register(std::vector<lexer::Toke
     std::string_view name = reg.get_result().content;
     name.remove_prefix(1);
 
-    if (name == "A") return result_t::success({ Register::Type::A, reg.get_result() });
-    if (name == "B") return result_t::success({ Register::Type::B, reg.get_result() });
-    if (name == "C") return result_t::success({ Register::Type::C, reg.get_result() });
-    if (name == "D") return result_t::success({ Register::Type::D, reg.get_result() });
-    if (name == "E") return result_t::success({ Register::Type::E, reg.get_result() });
-    if (name == "F") return result_t::success({ Register::Type::F, reg.get_result() });
-    if (name == "G") return result_t::success({ Register::Type::G, reg.get_result() });
-    if (name == "H") return result_t::success({ Register::Type::H, reg.get_result() });
-    if (name == "I") return result_t::success({ Register::Type::I, reg.get_result() });
-    if (name == "J") return result_t::success({ Register::Type::J, reg.get_result() });
-    if (name == "K") return result_t::success({ Register::Type::K, reg.get_result() });
-    if (name == "L") return result_t::success({ Register::Type::L, reg.get_result() });
-    if (name == "PC") return result_t::success({ Register::Type::PC, reg.get_result() });
-    if (name == "FG") return result_t::success({ Register::Type::FG, reg.get_result() });
-    if (name == "SP") return result_t::success({ Register::Type::SP, reg.get_result() });
-    if (name == "BP") return result_t::success({ Register::Type::BP, reg.get_result() });
+    if (name == "A") return result_t::success({ Register::Type::A, reg.get_result().location });
+    if (name == "B") return result_t::success({ Register::Type::B, reg.get_result().location });
+    if (name == "C") return result_t::success({ Register::Type::C, reg.get_result().location });
+    if (name == "D") return result_t::success({ Register::Type::D, reg.get_result().location });
+    if (name == "E") return result_t::success({ Register::Type::E, reg.get_result().location });
+    if (name == "F") return result_t::success({ Register::Type::F, reg.get_result().location });
+    if (name == "G") return result_t::success({ Register::Type::G, reg.get_result().location });
+    if (name == "H") return result_t::success({ Register::Type::H, reg.get_result().location });
+    if (name == "I") return result_t::success({ Register::Type::I, reg.get_result().location });
+    if (name == "J") return result_t::success({ Register::Type::J, reg.get_result().location });
+    if (name == "K") return result_t::success({ Register::Type::K, reg.get_result().location });
+    if (name == "L") return result_t::success({ Register::Type::L, reg.get_result().location });
+    if (name == "PC") return result_t::success({ Register::Type::PC, reg.get_result().location });
+    if (name == "FG") return result_t::success({ Register::Type::FG, reg.get_result().location });
+    if (name == "SP") return result_t::success({ Register::Type::SP, reg.get_result().location });
+    if (name == "BP") return result_t::success({ Register::Type::BP, reg.get_result().location });
 
-    return result_t::error({ Error::Type::Internal, reg.get_result().location });
+    return result_t::error(Error::Type::Internal, { reg.get_result().location });
 }
 
 Result<std::unique_ptr<Argument>> parse_argument(std::vector<lexer::Token> const& tokens, std::size_t& ref_pos) {
@@ -313,9 +329,9 @@ Result<std::unique_ptr<Argument>> parse_argument(std::vector<lexer::Token> const
                 ref_pos = pos;
                 
                 auto res = std::make_unique<DereferencedArgument>(reg.get_result().first, nullptr);
-                //res->tokens.push_back(bracket_token.get_result());
-                //res->tokens.push_back(reg.get_result().second);
-                //res->tokens.push_back(closing_bracket.get_result());
+                res->locations.extends(bracket_token.get_result().location);
+                res->locations.extends(reg.get_result().second);
+                res->locations.extends(closing_bracket.get_result().location);
 
                 return result_t::success(std::move(res));
 
@@ -329,10 +345,11 @@ Result<std::unique_ptr<Argument>> parse_argument(std::vector<lexer::Token> const
                 ref_pos = pos;
 
                 auto res = std::make_unique<DereferencedArgument>(reg.get_result().first, std::move(constant.get_result()));
-                //res->tokens.push_back(bracket_token.get_result());
-                //res->tokens.push_back(reg.get_result().second);
-                //res->tokens.push_back(plus_token.get_result());
-                //res->tokens.push_back(closing_bracket.get_result());
+                res->locations.extends(bracket_token.get_result().location);
+                res->locations.extends(reg.get_result().second);
+                res->locations.extends(plus_token.get_result().location);
+                res->locations.extends(res->displacement->locations);
+                res->locations.extends(closing_bracket.get_result().location);
 
                 return result_t::success(std::move(res));
             }
@@ -340,34 +357,44 @@ Result<std::unique_ptr<Argument>> parse_argument(std::vector<lexer::Token> const
     }
 
     auto reg = parse_register(tokens, ref_pos);
-    if (reg.is_success())
-        return result_t::success(std::make_unique<Register>(reg.get_result().first));
+    if (reg.is_success()) {
+        auto res = std::make_unique<Register>(reg.get_result().first);
+        res->locations.extends(reg.get_result().second);
+        return result_t::success(std::move(res));
+    }
 
     auto constant = parse_constant(tokens, ref_pos);
-    if(constant.is_success())
+    if(constant.is_success()) {
         return result_t::success(std::move(constant.get_result()));
-    
+    }
+
     return result_t::error(constant.get_error());
 }
 
-Result<std::vector<std::unique_ptr<Argument>>> parse_arguments(std::vector<lexer::Token> const& tokens, std::size_t& ref_pos) {
-    using result_t = Result<std::vector<std::unique_ptr<Argument>>>;
+Result<std::pair<std::vector<std::unique_ptr<Argument>>, lexer::ScatteredLocation>> parse_arguments(std::vector<lexer::Token> const& tokens, std::size_t& ref_pos) {
+    using result_t = Result<std::pair<std::vector<std::unique_ptr<Argument>>, lexer::ScatteredLocation>>;
     std::size_t pos = ref_pos;
 
     std::vector<std::unique_ptr<Argument>> args;    
+    lexer::ScatteredLocation locations;
 
     auto arg = parse_argument(tokens, pos);
-    if (arg.is_error()) { ref_pos = pos; return result_t::success(std::move(args)); }
+    if (arg.is_error()) { ref_pos = pos; return result_t::success({ std::move(args), locations }); }
     args.emplace_back(std::move(arg.get_result()));
+    locations.extends(args.back()->locations);
 
-    while(eat(tokens, pos, lexer::Type::Comma).is_success()) {
+    auto comma = eat(tokens, pos, lexer::Type::Comma);
+    while(comma.is_success()) {
         auto arg = parse_argument(tokens, pos);
         if (auto err = arg.get_if_error()) return result_t::error(*err);
-        // !!!
+
         args.emplace_back(std::move(arg.get_result()));
+        locations.extends(args.back()->locations);
+        locations.extends(comma.get_result().location);
+        comma = eat(tokens, pos, lexer::Type::Comma);
     }
     ref_pos = pos;
-    return result_t::success(std::move(args));
+    return result_t::success({ std::move(args), locations });
 }
 
 Result<std::unique_ptr<Statement>> parse_command(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
@@ -379,8 +406,9 @@ Result<std::unique_ptr<Statement>> parse_command(std::vector<lexer::Token> const
     auto args = parse_arguments(tokens, pos);
     if (auto err = args.get_if_error()) return result_t::error(*err);
 
-    auto res = std::make_unique<Command>(ope_res.get_result().first, std::move(args.get_result()));
-    //res->tokens.push_back(ope_res.get_result().second);
+    auto res = std::make_unique<Command>(ope_res.get_result().first, std::move(args.get_result().first));
+    res->locations.extends(args.get_result().second);
+    res->locations.extends(ope_res.get_result().second);
 
     return result_t::success(std::move(res));
 }
@@ -389,8 +417,8 @@ Result<std::unique_ptr<Statement>> parse_data(std::vector<lexer::Token> const& t
     using result_t = Result<std::unique_ptr<Statement>>;
     std::size_t pos = ref_pos;
 
-    auto token = eat_one_of(tokens, pos, {lexer::Type::DB, lexer::Type::DD, lexer::Type::DW});
-    if (auto err = token.get_if_error()) return result_t::error(*err); 
+    auto token = eat_one_of(tokens, pos, { lexer::Type::DB, lexer::Type::DD, lexer::Type::DW });
+    if (auto err = token.get_if_error()) { return result_t::error(*err); }
 
     std::size_t size;
     switch (token.get_result().type) {
@@ -401,6 +429,8 @@ Result<std::unique_ptr<Statement>> parse_data(std::vector<lexer::Token> const& t
     }
 
     std::vector<std::unique_ptr<Constant>> constants;
+    lexer::ScatteredLocation locations;
+    locations.extends(token.get_result().location);
 
     {
         auto constant = parse_constant(tokens, pos);
@@ -408,23 +438,33 @@ Result<std::unique_ptr<Statement>> parse_data(std::vector<lexer::Token> const& t
             constants.emplace_back(std::move(constant.get_result()));
         } else {
             auto string = eat(tokens, pos, lexer::Type::String);
-            if (auto err = string.get_if_error()) return result_t::error(*err); 
-            constants.emplace_back(std::make_unique<String>(string.get_result().content));
+            if (auto err = string.get_if_error()) { return result_t::error(*err); }
+            constants.emplace_back(std::make_unique<String>(string.get_result().content))->locations.extends(string.get_result().location);
         }
+        locations.extends(constants.back()->locations);
     }
 
-    while(eat(tokens, pos, lexer::Type::Comma).is_success()) {
+    auto comma = eat(tokens, pos, lexer::Type::Comma);
+    while(comma.is_success()) {
         auto constant = parse_constant(tokens, pos);
         if (constant.is_success()) {
             constants.emplace_back(std::move(constant.get_result()));
         } else {
             auto string = eat(tokens, pos, lexer::Type::String);
-            if (auto err = string.get_if_error()) return result_t::error(*err); 
-            constants.emplace_back(std::make_unique<String>(string.get_result().content));
+            if (auto err = string.get_if_error()) { return result_t::error(*err); }
+            constants.emplace_back(std::make_unique<String>(string.get_result().content))->locations.extends(string.get_result().location);
         }
+        locations.extends(constants.back()->locations);
+        locations.extends(comma.get_result().location);
+
+        comma = eat(tokens, pos, lexer::Type::Comma);
     }
     ref_pos = pos;
-    return result_t::success(std::make_unique<Data>(size, std::move(constants)));
+
+    auto res = std::make_unique<Data>(size, std::move(constants));
+    res->locations = locations;
+
+    return result_t::success(std::move(res));
 }
 
 Result<std::unique_ptr<Statement>> parse_label(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
@@ -436,7 +476,11 @@ Result<std::unique_ptr<Statement>> parse_label(std::vector<lexer::Token> const& 
     auto colon = eat(tokens, pos, lexer::Type::Colon);
     if (auto err = colon.get_if_error()) return result_t::error(*err);
 
-    return result_t::success(std::make_unique<Label>(ident.get_result().content));
+    auto res = std::make_unique<Label>(ident.get_result().content);
+    res->locations.extends(ident.get_result().location);
+    res->locations.extends(colon.get_result().location);
+
+    return result_t::success(std::move(res));
 }
 
 Result<std::unique_ptr<Statement>> parse_directive(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
@@ -445,10 +489,10 @@ Result<std::unique_ptr<Statement>> parse_directive(std::vector<lexer::Token> con
     auto dir_token = eat(tokens, pos, lexer::Type::Directive);
     if (auto err = dir_token.get_if_error()) return result_t::error(*err);
    
-    auto token = eat(tokens, pos, lexer::Type::Ident);
-    if (auto err = token.get_if_error()) return result_t::error(*err);
+    auto ident = eat(tokens, pos, lexer::Type::Ident);
+    if (auto err = ident.get_if_error()) return result_t::error(*err);
     
-    if (token.get_result().content == "align") {
+    if (ident.get_result().content == "align") {
         auto num = eat_one_of(tokens, pos, {lexer::Type::Bin, lexer::Type::Oct, lexer::Type::Dec, lexer::Type::Hex});
         if (auto err = num.get_if_error()) return result_t::error(*err);
 
@@ -460,10 +504,18 @@ Result<std::unique_ptr<Statement>> parse_directive(std::vector<lexer::Token> con
             case lexer::Type::Hex:   base = 16; break;
             default: std::exit(666); break;
         }
-        return result_t::success(std::make_unique<Align>(Number(num.get_result().content, base)));
+        auto res = std::make_unique<Align>(Number(num.get_result().content, base));
+
+        res->number.locations.extends(num.get_result().location);
+
+        res->locations.extends(dir_token.get_result().location);
+        res->locations.extends(ident.get_result().location);
+        res->locations.extends(res->number.locations);
+
+        return result_t::success(std::move(res));
     }
 
-    return result_t::error({ Error::Type::Internal, token.get_result().location });
+    return result_t::error(Error::Type::Internal, { ident.get_result().location });
 }
 
 Result<std::unique_ptr<Statement>> parse_statement(std::vector<lexer::Token> const& tokens, std::size_t& ref_pos) {
@@ -510,7 +562,7 @@ Result<std::unique_ptr<Statement>> parse_statement(std::vector<lexer::Token> con
         location = tokens[ref_pos].location;
     }
 
-    return result_t::error({ Error::Type::Internal, location });
+    return result_t::error(Error::Type::Internal, { location });
 }
 
 ParserResult parse(std::vector<lexer::Token> const& tokens) {

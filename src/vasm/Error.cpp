@@ -90,15 +90,6 @@ std::string_view to_string(Error::Type const& type) {
         case Error::Type::L008_Expected_register:
             return "[L008] Expected register";
 
-        case Error::Type::LexUnknownCharacter:
-            return "[L---] Unknown character";
-
-        case Error::Type::LexUnknownEscapeSequence:
-            return "[L---] Invalid escape sequence in string";
-
-        case Error::Type::LexInvalidNumber:
-            return "[L---] Invalid number format";
-
         case Error::Type::Internal:
         default:
             return "Internal error";
@@ -115,11 +106,6 @@ Error::TypeInfo get_type_info(Error::Type type) {
         case Error::Type::L006_Invalid_floating_number:
         case Error::Type::L007_Undefined_number:
         case Error::Type::L008_Expected_register:
-            return {type, Error::TypeInfo::Category::Lexical};
-
-        case Error::Type::LexUnknownCharacter:
-        case Error::Type::LexUnknownEscapeSequence:
-        case Error::Type::LexInvalidNumber:
             return {type, Error::TypeInfo::Category::Lexical};
 
         case Error::Type::Internal:

@@ -10,9 +10,6 @@ namespace vcrate::vasm {
 
 struct Error {
     enum class Type {
-        LexUnknownCharacter,
-        LexUnknownEscapeSequence,
-        LexInvalidNumber,
         Internal,
 
         L001_Unknown_character,

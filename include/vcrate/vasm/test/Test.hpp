@@ -33,7 +33,7 @@ struct Test {
     std::string name;
     std::vector<TestCase> cases;
 
-    std::ostream& report(std::ostream& os, bool use_color = true);
+    std::ostream& report(std::ostream& os, bool only_error = false, bool use_color = true);
 };
 
 #define TEST(__name) \
@@ -52,5 +52,8 @@ struct Test {
 
 #define REPORT_TEST(__name) \
     (RUN_TEST(__name), test_ ## __name .report(std::cerr))
+
+#define REPORT_TEST_ERROR_ONLY(__name) \
+    (RUN_TEST(__name), test_ ## __name .report(std::cerr, true))
 
 }

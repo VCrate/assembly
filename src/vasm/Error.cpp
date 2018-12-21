@@ -66,12 +66,39 @@ std::string_view to_string(Error::TypeInfo::Category const& cat) {
 
 std::string_view to_string(Error::Type const& type) {
     switch(type) {
+        case Error::Type::L001_Unknown_character:
+            return "[L001] Unknown character";
+
+        case Error::Type::L002_Unknown_escape_sequence:
+            return "[L002] Unknown esacape sequence";
+
+        case Error::Type::L003_Invalid_number_prefix:
+            return "[L003] Invalid number prefix";
+
+        case Error::Type::L004_Invalid_symbol_in_number:
+            return "[L004] Invalid symbol in number";
+
+        case Error::Type::L005_Invalid_register:
+            return "[L005] Invalid register";
+
+        case Error::Type::L006_Invalid_floating_number:
+            return "[L006] Invalid floating number";
+
+        case Error::Type::L007_Undefined_number:
+            return "[L007] Undefined number";
+
+        case Error::Type::L008_Expected_register:
+            return "[L008] Expected register";
+
         case Error::Type::LexUnknownCharacter:
-            return "Unknown character";
+            return "[L---] Unknown character";
+
         case Error::Type::LexUnknownEscapeSequence:
-            return "Invalid escape sequence in string";
+            return "[L---] Invalid escape sequence in string";
+
         case Error::Type::LexInvalidNumber:
-            return "Invalid number format";
+            return "[L---] Invalid number format";
+
         case Error::Type::Internal:
         default:
             return "Internal error";
@@ -80,6 +107,16 @@ std::string_view to_string(Error::Type const& type) {
 
 Error::TypeInfo get_type_info(Error::Type type) {
     switch(type) {
+        case Error::Type::L001_Unknown_character:
+        case Error::Type::L002_Unknown_escape_sequence:
+        case Error::Type::L003_Invalid_number_prefix:
+        case Error::Type::L004_Invalid_symbol_in_number:
+        case Error::Type::L005_Invalid_register:
+        case Error::Type::L006_Invalid_floating_number:
+        case Error::Type::L007_Undefined_number:
+        case Error::Type::L008_Expected_register:
+            return {type, Error::TypeInfo::Category::Lexical};
+
         case Error::Type::LexUnknownCharacter:
         case Error::Type::LexUnknownEscapeSequence:
         case Error::Type::LexInvalidNumber:

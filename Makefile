@@ -75,7 +75,7 @@ SRC_EXCLUDE_FILE :=
 # All files that are not use for libraries, don't add src/
 SRC_MAINS := main.cpp vasm/test/Lexer.cpp
 # The main file to use (must be in $(SRC_MAINS))
-SRC_MAIN := main.cpp
+SRC_MAIN := vasm/test/Lexer.cpp
 
 #####
 ##### FLAGS

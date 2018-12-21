@@ -10,7 +10,7 @@ enum class Type {
 
     Register,
     Ident, 
-    Hex, Dec, Oct, Bin,
+    Hex, Dec, Oct, Bin, Float,
     String, Char,
 
     Directive,

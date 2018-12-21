@@ -64,11 +64,8 @@ bool operator == (lexer::LexerResult const& lhs, lexer::LexerResult const& rhs) 
 
     auto lres = lhs.get_result();
     auto rres = rhs.get_result();
-    std::cerr << lres.size() << ", " << rres.size();
 
-    bool b = lres.size() == rres.size() && std::equal(std::begin(lres), std::end(lres), std::begin(rres), [] (auto const& l, auto const& r) { return l == r; });
-    std::cout << " => " << b << '\n';
-    return b;
+    return std::equal(std::begin(lres), std::end(lres), std::begin(rres), std::end(rres), [] (auto const& l, auto const& r) { return l == r; });
 }
 
 void TestCase::lexer_test(std::vector<std::string> const& source, lexer::LexerResult const& expected) {
@@ -115,7 +112,7 @@ void TestCase::lexer_test(std::vector<std::string> const& source, lexer::LexerRe
 */
 
 
-std::ostream& Test::report(std::ostream& os, bool use_color) {
+std::ostream& Test::report(std::ostream& os, bool only_error, bool use_color) {
     constexpr std::string_view color_red   = "\033[31m";
     constexpr std::string_view color_green = "\033[32m";
     constexpr std::string_view color_blue  = "\033[34m";
@@ -123,23 +120,49 @@ std::ostream& Test::report(std::ostream& os, bool use_color) {
     constexpr std::string_view color_bold  = "\033[1m";
 
     os << color_bold << "[" << name << "]\n" << color_reset;
+    
+    long tests_count{ 0 };
+    long success_tests_count{ 0 };
     for(auto const& testcase : cases) {
-        os << color_blue << "# " << testcase.testcase << '\n' << color_reset;
+        bool printed_case{ false };
+        auto print_case_once = [&] () {
+            if (!printed_case) {
+                printed_case = true;
+                os << color_blue << "# " << testcase.testcase << '\n' << color_reset;
+            }
+        };
 
         for(auto const& res : testcase.results) {
-            if (!res.but.empty())
+            bool has_failed = !res.but.empty();
+
+            ++tests_count;
+            if (!has_failed) {
+                ++success_tests_count;
+            }
+
+            if (!has_failed && only_error) {
+                continue;
+            }
+
+            print_case_once();
+
+            if (has_failed) {
                 os << color_red << color_bold << "\tFAIL  ";
-            else
+            } else {
                 os << color_green << color_bold << "\tOK    ";
+            }
 
             os << color_reset << res.test << '\n';
             os << "\t  ~   " << res.expect << '\n';
-            if (!res.but.empty())
+            if (has_failed)
                 os << "\t  BUT " << res.but << '\n';
             if (!res.message.empty())
                 os << "\t      " << res.message << '\n';
         }
     }
+
+    os << '\n' << (success_tests_count >= tests_count ? color_green : color_red) << color_bold << success_tests_count << " / " << tests_count << " tests successfully ran\n" << color_reset;
+
     return os;
 }
 

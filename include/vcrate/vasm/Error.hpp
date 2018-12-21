@@ -13,7 +13,16 @@ struct Error {
         LexUnknownCharacter,
         LexUnknownEscapeSequence,
         LexInvalidNumber,
-        Internal
+        Internal,
+
+        L001_Unknown_character,
+        L002_Unknown_escape_sequence,
+        L003_Invalid_number_prefix,
+        L004_Invalid_symbol_in_number,
+        L005_Invalid_register,
+        L006_Invalid_floating_number,
+        L007_Undefined_number,
+        L008_Expected_register,
     };
 
     struct TypeInfo {

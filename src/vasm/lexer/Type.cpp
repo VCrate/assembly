@@ -12,6 +12,7 @@ std::string_view to_string(Type type) {
         case Type::Dec: return "Dec"; 
         case Type::Oct: return "Oct"; 
         case Type::Bin: return "Bin";
+        case Type::Float: return "Float";
         case Type::String: return "String";
         case Type::Char: return "Char";
         case Type::Directive: return "Directive";

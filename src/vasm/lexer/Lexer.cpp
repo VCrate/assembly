@@ -120,7 +120,7 @@ Type ident_type(std::string content) {
 Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
-        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, lexer::ScatteredLocation{{{position, 1}}}});
+        return Result<TokenPos>::error({Error::Type::L001_Unknown_character, lexer::ScatteredLocation{{{position, 1}}}});
 
     Location location { position, 1 };
     position = move_position(source, position);
@@ -137,7 +137,7 @@ Result<TokenPos> tokenize_ident(std::vector<std::string> const& source, Position
 Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
     if (!(c == '"' || c == '\''))
-        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {{{position, 1}}}});
+        return Result<TokenPos>::error({Error::Type::L001_Unknown_character, {{{position, 1}}}});
 
     char quote = c;
 
@@ -201,7 +201,7 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
                         location.line = position.line;
                         location.character = position.character - 1;
                         location.lenght = 2;
-                        return Result<TokenPos>::error({ Error::Type::LexUnknownEscapeSequence, {{ location }}});
+                        return Result<TokenPos>::error({ Error::Type::L002_Unknown_escape_sequence, {{ location }}});
                     }
                     break;
             }
@@ -221,41 +221,37 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
     });
 }
 
-Result<TokenPos> tokenize_register_or_mod(std::vector<std::string> const& source, Position position) {
+Result<TokenPos> tokenize_register(std::vector<std::string> const& source, Position position) {
     Location location { position, 1 };
     auto ident = tokenize_ident(source, move_position(source, position));
-    if (ident.is_error())
-        return make_token(source, location, Type::Mod);
+    if (ident.is_error()) {
+        return Result<TokenPos>::error(Error::Type::L008_Expected_register, { location });
+    }
 
     auto&& [token, pos] = ident.get_result();
-    if (token.content == "A" ||
-        token.content == "B" ||
-        token.content == "C" ||
-        token.content == "D" ||
-        token.content == "E" ||
-        token.content == "F" ||
-        token.content == "G" ||
-        token.content == "H" ||
-        token.content == "I" ||
-        token.content == "J" ||
-        token.content == "K" ||
-        token.content == "L" ||
-        token.content == "SP" ||
-        token.content == "BP" ||
-        token.content == "PC" ||
-        token.content == "FG"
-    ) {
-        location.lenght += token.location.lenght;
+    std::string token_name = token.content;
+    location.lenght += token.location.lenght;
+    
+    std::transform(std::begin(token_name), std::end(token_name), std::begin(token_name), [] (unsigned char c) { return ::toupper(c); });
+
+    static std::unordered_set<std::string_view> valid_register_names {
+        "A", "B", "C", "D",
+        "E", "F", "G", "H",
+        "I", "J", "K", "L",
+        "SP", "BP", "PC", "FG"
+    };
+
+    if (valid_register_names.count(std::string_view{ token_name }) > 0) {
         return make_token(source, location, Type::Register);
     } 
 
-    return make_token(source, location, Type::Mod);
+    return Result<TokenPos>::error(Error::Type::L005_Invalid_register, { location });
 }
 
 Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Position position) {
     char c = at(source, position);
-    if (!(c >= '0' && c <= '9'))
-        return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {{{position, 1}}}});
+    if (!(c >= '0' && c <= '9') && c != '.' && c != '_')
+        return Result<TokenPos>::error({Error::Type::L001_Unknown_character, {{{position, 1}}}});
 
     Token token;
     token.type = Type::Dec;
@@ -264,52 +260,66 @@ Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Positio
     token.location.lenght = 0;
     token.content = "";
 
-    std::unordered_set<char> symbols = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    bool has_prefix = false;
 
     if (c == '0') {
-        position = move_position(source, position);
-        c = at(source, position);
-        token.location.lenght++;
+        c = at(source, move_position(source, position));
+        has_prefix = true;
+
         switch(c) {
             case 'x':
                 token.type = Type::Hex;
-                symbols = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'F', 'f'};
-                position = move_position(source, position);
-                c = at(source, position);
-                token.location.lenght++;
                 break;
             case 'b':
                 token.type = Type::Bin;
-                symbols = {'0', '1'};
-                position = move_position(source, position);
-                c = at(source, position);
-                token.location.lenght++;
                 break;
             case 'o':
                 token.type = Type::Oct;
-                symbols = {'0', '1', '2', '3', '4', '5', '6', '7'};
-                position = move_position(source, position);
-                c = at(source, position);
-                token.location.lenght++;
                 break;
             case 'd':
-                position = move_position(source, position);
-                c = at(source, position);
-                token.location.lenght++;
                 break;
+
+
             default:
-                token.content += '0';
+                if ((c < '0' || c > '9') && c != '.' && c != '_') {
+                    token.location.lenght = 2;
+                    return Result<TokenPos>::error({ Error::Type::L003_Invalid_number_prefix, {{ token.location }}});
+                }
+                has_prefix = false;
+                c = at(source, position); // '0'
                 break;
         }
+
+        if (has_prefix) {
+            position = move_position(source, position, 2);
+            c = at(source, position);
+            token.location.lenght += 2;
+        }
     }
+
+    Position last_point_position;
     
-    while(!is_eof(source, position) && symbols.find(c) != symbols.end()) {
+    while(!is_eof(source, position) && ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '.')) {
+        if (c == '.') {
+            if (token.content.empty() || token.type == Type::Float || (has_prefix && token.type != Type::Dec)) {
+                return Result<TokenPos>::error(Error::Type::L006_Invalid_floating_number, {{ position, 1 }});
+            }
+            last_point_position = position;
+            token.type = Type::Float;
+        } else if (
+            (token.type == Type::Float && (c < '0' || c > '9')) ||
+            (token.type == Type::Bin   && (c < '0' || c > '1')) ||
+            (token.type == Type::Oct   && (c < '0' || c > '7')) ||
+            (token.type == Type::Dec   && (c < '0' || c > '9')) ||
+            (token.type == Type::Hex   && (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F'))) {
+            return Result<TokenPos>::error(Error::Type::L004_Invalid_symbol_in_number, {{ position, 1 }});
+        }
         token.content += c;
         position = move_position(source, position);
         c = at(source, position);
         token.location.lenght++;
 
-        while(!is_eof(source, position) && (c == '\'' || c == '_')) {
+        while(!is_eof(source, position) && c == '_') {
             position = move_position(source, position);
             c = at(source, position);
             token.location.lenght++;
@@ -317,8 +327,13 @@ Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Positio
 
     }
 
-    if (token.content.empty())
-        return Result<TokenPos>::error({ Error::Type::LexInvalidNumber, {{ token.location }}});
+    if (token.content.empty()) {
+        return Result<TokenPos>::error({ Error::Type::L007_Undefined_number, {{ token.location }}});
+    }
+
+    if (token.content.back() == '.') {
+        return Result<TokenPos>::error(Error::Type::L006_Invalid_floating_number, {{ last_point_position, 1 }});
+    }
 
     return Result<TokenPos>::success({ token, position });
 }
@@ -328,12 +343,15 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
         return tokenize_ident(source, position);
 
-    if (c >= '0' && c <= '9')
+    if ((c >= '0' && c <= '9') || c == '.')
             return tokenize_number(source, position);
 
     switch(c) {
+        case '@':
+            return tokenize_register(source, position);
+
         case '%':
-            return tokenize_register_or_mod(source, position);
+            return make_token(source, { position, 1 }, Type::Mod);
 
         case '"':
         case '\'':
@@ -426,7 +444,7 @@ Result<TokenPos> tokenize_base(std::vector<std::string> const& source, Position 
         default:
             break;
     }
-    return Result<TokenPos>::error({Error::Type::LexUnknownCharacter, {{{position, 1}}} });
+    return Result<TokenPos>::error({Error::Type::L001_Unknown_character, {{{position, 1}}} });
 }
 
 }

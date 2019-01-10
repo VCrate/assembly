@@ -13,6 +13,7 @@ public:
     Align(Number const& number);
 
     std::string to_string() const override;
+    void generate(generator::Generator& gen) const override;
 
     Number number;
 

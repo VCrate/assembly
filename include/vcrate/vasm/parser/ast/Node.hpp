@@ -5,14 +5,15 @@
 
 #include <vcrate/vasm/lexer/Location.hpp>
 #include <vcrate/vasm/generator/Generator.hpp>
-#include <vcrate/vasm/parser/ast/Node.hpp>
 
 namespace vcrate::vasm::parser {
 
-class Statement : public Node {
+class Node {
 public:
 
-    virtual void generate(generator::Generator& gen) const = 0;
+    virtual std::string to_string() const = 0;
+
+    lexer::ScatteredLocation locations;
 
 };
 

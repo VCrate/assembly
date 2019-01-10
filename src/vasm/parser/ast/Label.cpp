@@ -8,4 +8,8 @@ std::string Label::to_string() const {
     return "LABEL{ " + name + " }";
 }
 
+void Label::generate(generator::Generator& gen) const {
+    //gen.add_label(name);
+}
+
 }

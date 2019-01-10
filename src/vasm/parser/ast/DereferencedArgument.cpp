@@ -2,7 +2,7 @@
 
 namespace vcrate::vasm::parser {
 
-DereferencedArgument::DereferencedArgument(Register reg, std::unique_ptr<Constant> displacement) : reg(reg), displacement(std::move(displacement)) {}
+DereferencedArgument::DereferencedArgument(Register reg, std::unique_ptr<ShortConstant> displacement) : reg(reg), displacement(std::move(displacement)) {}
 
 std::string DereferencedArgument::to_string() const {
     if(displacement) {

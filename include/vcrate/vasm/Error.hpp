@@ -20,6 +20,8 @@ struct Error {
         L006_Invalid_floating_number,
         L007_Undefined_number,
         L008_Expected_register,
+
+        G001_Undefined_label,
     };
 
     struct TypeInfo {

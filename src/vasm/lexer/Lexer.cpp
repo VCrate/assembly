@@ -268,20 +268,24 @@ Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Positio
 
         switch(c) {
             case 'x':
+            case 'X':
                 token.type = Type::Hex;
                 break;
             case 'b':
+            case 'B':
                 token.type = Type::Bin;
                 break;
             case 'o':
+            case 'O':
                 token.type = Type::Oct;
                 break;
             case 'd':
+            case 'D':
                 break;
 
 
             default:
-                if ((c < '0' || c > '9') && c != '.' && c != '_') {
+                if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
                     token.location.lenght = 2;
                     return Result<TokenPos>::error({ Error::Type::L003_Invalid_number_prefix, {{ token.location }}});
                 }

@@ -15,4 +15,10 @@ std::string Data::to_string() const {
     return str += " }";
 }
 
+void Data::generate(generator::Generator& gen) const {
+    for(auto const& c : constants) {
+        //gen.push_data(c.value());
+    }
+}
+
 }

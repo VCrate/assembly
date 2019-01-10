@@ -2,11 +2,11 @@
 
 #include <vector>
 
-#include <vcrate/vasm/parser/ast/Constant.hpp>
+#include <vcrate/vasm/parser/ast/ShortConstant.hpp>
 
 namespace vcrate::vasm::parser {
 
-class Term : public Constant {
+class Term : public ShortConstant {
 public:
 
 };

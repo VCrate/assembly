@@ -79,6 +79,10 @@ TEST(LEXER) {
     }));
 
     CASE("Token Dec");
+    LEXER_TEST(as_source("0"), lexer::LexerResult::success({
+        TOKEN(0, 0, 1, "0", Dec),
+        TOKEN(0, 1, 1, "\n", NewLine)
+    }));
     LEXER_TEST(as_source("0d92"), lexer::LexerResult::success({
         TOKEN(0, 0, 4, "92", Dec),
         TOKEN(0, 4, 1, "\n", NewLine)
@@ -336,6 +340,9 @@ TEST(LEXER) {
 
     CASE("L003 - Invalid number prefix");
     LEXER_TEST(as_source("mov @A, 0h1234"), lexer::LexerResult::error(
+        Error::Type::L003_Invalid_number_prefix, { lexer::Location{ 0, 8, 2 } }
+    ));
+    LEXER_TEST(as_source("mov @A, 0h"), lexer::LexerResult::error(
         Error::Type::L003_Invalid_number_prefix, { lexer::Location{ 0, 8, 2 } }
     ));
 

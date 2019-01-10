@@ -12,6 +12,7 @@ public:
     Label(std::string const& name);
 
     std::string to_string() const override;
+    void generate(generator::Generator& gen) const override;
 
     std::string name;
 

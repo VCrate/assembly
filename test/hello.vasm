@@ -2,14 +2,14 @@ msg:
     db "Hello World\n", 0x0, '\0'
 
 _start:
-    mov %A, msg
+    mov @A, msg
     
 begin:
-    cmp [%A], 0x0
+    cmp [@A], 0x0
     jmpe end
 
-    out [%A]
-    inc %A
+    out [@A]
+    inc @A
 
 end:
     hlt

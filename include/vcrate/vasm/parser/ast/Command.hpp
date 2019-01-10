@@ -13,12 +13,13 @@ namespace vcrate::vasm::parser {
 class Command : public Statement {
 public:
 
-    Command(bytecode::Operations ope, std::vector<std::unique_ptr<Argument>>&& arguments);
+    Command(bytecode::Operations ope, std::vector<Argument>&& arguments);
 
     std::string to_string() const override;
+    void generate(generator::Generator& gen) const override;
 
     bytecode::Operations ope;
-    std::vector<std::unique_ptr<Argument>> arguments; 
+    std::vector<Argument> arguments; 
 
 };
 

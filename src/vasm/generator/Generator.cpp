@@ -6,7 +6,7 @@
 #include <algorithm>
 
 namespace vcrate::vasm::generator {
-
+/*
 std::ostream& operator<< (std::ostream& os, Generator const& gen) {
     for(auto istr : gen.code) {
         os << istr << '\n';
@@ -27,5 +27,5 @@ void Generator::add_label(std::string const& name) {
     labels.emplace(name, code.size());
 }
 
-
+*/
 }

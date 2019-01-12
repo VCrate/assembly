@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
 #include <optional>
 
 #include <vcrate/bytecode/Operations.hpp>
@@ -124,6 +125,9 @@ struct Term : Located {
     variant_t value;
 };
 
+std::ostream& operator << (std::ostream& os, Term const& term);
+std::ostream& operator << (std::ostream& os, Term::variant_t const& term);
+
 using precedence_t = ui32;
 precedence_t precedence_of(BinaryRelation::Type type);
 
@@ -141,6 +145,8 @@ struct Constant : Located {
     variant_t value;
 };
 
+std::ostream& operator << (std::ostream& os, Constant const& constant);
+std::ostream& operator << (std::ostream& os, Constant::variant_t const& constant);
 
 
 
@@ -166,6 +172,8 @@ struct Argument : Located {
     variant_t value;
 };
 
+std::ostream& operator << (std::ostream& os, Argument const& argument);
+std::ostream& operator << (std::ostream& os, Argument::variant_t const& argument);
 
 
 
@@ -222,5 +230,8 @@ struct Statement : Located {
 
     variant_t value;
 };
+
+std::ostream& operator << (std::ostream& os, Statement const& statement);
+std::ostream& operator << (std::ostream& os, Statement::variant_t const& statement);
 
 }

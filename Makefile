@@ -81,7 +81,13 @@ SRC_MAIN := main.cpp
 ##### FLAGS
 #####
 
-FLAGS := -std=c++17 -g3 -Wall -Wextra -Wno-pmf-conversions -O2
+OPTI := -O3
+FLAGS := -std=c++2a  $(OPTI) -pthread
+FLAGS += -Wall -Wextra -Wno-pmf-conversions -Wshadow -Wpedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op 
+FLAGS += -Wnull-dereference -Wuseless-cast -Wold-style-cast -Wcast-align -Wcast-qual -Wno-missing-field-initializers
+TEST_FLAGS := -fsanitize=address -fsanitize=pointer-subtract -fsanitize=pointer-compare -fsanitize=leak -fsanitize=undefined -fuse-ld=gold
+TEST_FLAGS += -fsanitize-address-use-after-scope
+# FLAGS += $(TEST_FLAGS)
 STATIC_LINK_FLAG := rcs
 
 # Include path

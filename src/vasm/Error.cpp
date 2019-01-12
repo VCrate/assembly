@@ -15,9 +15,9 @@ std::string_view substr(std::string const& s, std::size_t start, int len) {
 }
 
 std::ostream& Error::report_error(std::ostream& os, std::vector<std::string> const& source, bool use_color) const {
-    auto const& locations = this->locations.locations;
-    for(std::size_t i{0}; i < locations.size(); ++i) {
-        auto line = locations[i].line;
+    auto const& locs = locations.locations;
+    for(std::size_t i{0}; i < locs.size(); ++i) {
+        auto line = locs[i].line;
         
         if(line >= 2)
             os << std::setw(8) << std::setfill(' ') << line - 2 << " | " << source[line - 2];
@@ -30,8 +30,8 @@ std::ostream& Error::report_error(std::ostream& os, std::vector<std::string> con
             os << "\033[91m";
         }
 
-        for(; i < locations.size() && line == locations[i].line; ++i) {
-            auto const& location = locations[i];
+        for(; i < locs.size() && line == locs[i].line; ++i) {
+            auto const& location = locs[i];
 
             if (location.lenght > 0) {
                 os << std::string(11 + location.character, ' ') << std::string(location.lenght - 1, '~') << '^';
@@ -44,7 +44,7 @@ std::ostream& Error::report_error(std::ostream& os, std::vector<std::string> con
         os << to_string(info.category) << " error";
         if(use_color)
             os << "\033[0m";
-        os << "(" << line << ":" << locations[i].character + 1 << ") " << to_string(info.type) << '\n';
+        os << "(" << line << ":" << locs[i].character + 1 << ") " << to_string(info.type) << '\n';
     }
 
     return os;

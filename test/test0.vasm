@@ -1,12 +1,13 @@
+# align 1
         mov @A, 42              ; a = 42
         mov @B, 1337            ; b = 1337
         add @A, @B              ; a += b
-        dbg @A                  ; print a '\n'
-        out '\n'
+        dbg @A
+        out '\n'                ; print a '\n'
 
         itf @A                  ; a = (float) a
         itf @B                  ; b = (float) b
-        divf B, @A             ; b /= a
+        divf B, @A              ; b /= a
         dbg @B                  ; print b '\n'
         out '\n'
 
@@ -19,6 +20,9 @@ begin:
         inc @C                  ; ++c
 end:
         hlt                     ; halt program
+
+        mov @A, [@B + -(12 % 4 + ~~0)]
+mov:
 
 msg:
         db "Hello world!\n"

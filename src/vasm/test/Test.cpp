@@ -4,7 +4,7 @@
 
 namespace vcrate::vasm::test {
 
-TestCase::TestCase(std::string const& testcase) : testcase(testcase) {}
+TestCase::TestCase(std::string const& _testcase) : testcase(_testcase) {}
 
 bool TestCase::done() const { return is_done; }
 

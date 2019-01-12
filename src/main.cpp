@@ -81,10 +81,10 @@ int main() {
         return 1;
     } else {
         for(auto& statement : res_.get_result()) {
-            std::cout << statement->to_string() << '\n';
+            std::cout << statement << '\n';
         }
     }
-
+/*
     vcrate::vasm::generator::Generator gen;
     for(auto& statement : res_.get_result()) {
         statement->generate(gen);
@@ -92,5 +92,5 @@ int main() {
 
     std::cout << '\n';
     std::cout << gen << '\n';
-    
+*/
 }

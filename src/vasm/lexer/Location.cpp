@@ -93,6 +93,7 @@ void ScatteredLocation::extends(ScatteredLocation const& scattered_location) {
 }
 
 void ScatteredLocation::extends(Location const& location) {
+
     if (locations.empty()) {
         locations.push_back(location);
         return;
@@ -159,7 +160,10 @@ void ScatteredLocation::extends(Location const& location) {
         }
     }
 
-    locations.erase(std::begin(locations) + first, std::begin(locations) + last);
+    if (first <= last) {
+        locations.erase(std::begin(locations) + first, std::begin(locations) + last);
+    }
+    
     locations.insert(std::begin(locations) + first, merged);
 }
 

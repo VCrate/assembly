@@ -1,7 +1,7 @@
 #include <vcrate/vasm/generator/Instruction.hpp>
 
 namespace vcrate::vasm::generator {
-
+/*
 std::ostream& operator << (std::ostream& os, Instruction const& istr) {
     os << bytecode::OpDefinition::get(istr.ope).name << " (";
 
@@ -18,5 +18,5 @@ std::ostream& operator << (std::ostream& os, Instruction const& istr) {
 
     return os << ")";
 }
-    
+    */
 }

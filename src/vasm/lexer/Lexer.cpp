@@ -33,13 +33,14 @@ LexerResult tokenize(std::vector<std::string> const& source) {
     };
 
     std::vector<Token> tokens;
+    {
+        auto new_position = skip_whitespace(source, position);
 
-    auto new_position = skip_whitespace(source, position);
+        if (position.line < new_position.line)
+            tokens.push_back({{{position.line, static_cast<ui32>(source[position.line].size() - 1)}, 1}, "\n", Type::NewLine});
 
-    if (position.line < new_position.line)
-        tokens.push_back({{{position.line, static_cast<ui32>(source[position.line].size() - 1)}, 1}, "\n", Type::NewLine});
-
-    position = new_position;
+        position = new_position;
+    }
 
     while(!is_eof(source, position)) {
         auto res = tokenize_base(source, position);
@@ -197,11 +198,11 @@ Result<TokenPos> tokenize_string(std::vector<std::string> const& source, Positio
                     if (c == quote)
                         content += c;
                     else {
-                        Location location;
-                        location.line = position.line;
-                        location.character = position.character - 1;
-                        location.lenght = 2;
-                        return Result<TokenPos>::error({ Error::Type::L002_Unknown_escape_sequence, {{ location }}});
+                        Location tmp;
+                        tmp.line = position.line;
+                        tmp.character = position.character - 1;
+                        tmp.lenght = 2;
+                        return Result<TokenPos>::error({ Error::Type::L002_Unknown_escape_sequence, {{ tmp }}});
                     }
                     break;
             }
@@ -285,7 +286,7 @@ Result<TokenPos> tokenize_number(std::vector<std::string> const& source, Positio
 
 
             default:
-                if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                     token.location.lenght = 2;
                     return Result<TokenPos>::error({ Error::Type::L003_Invalid_number_prefix, {{ token.location }}});
                 }

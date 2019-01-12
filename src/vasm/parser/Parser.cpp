@@ -191,7 +191,7 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
                 term.locations,
                 UnaryRelation{
                     op,
-                    std::make_unique<Term>(std::move(term.value))
+                    std::make_unique<Term>(std::move(term))
                 }
             };
 
@@ -238,7 +238,7 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
             term.locations.extends(opening_paren->location);
             term.locations.extends(closing_paren.get_result().location);
 
-            return std::move(term);
+            return result_t::success(std::move(term));
         }
     }
     {
@@ -247,7 +247,7 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
             ref_pos = pos;
 
             return result_t::success(Term{
-                { std::move(ident->location) },
+                lexer::ScatteredLocation{{ std::move(ident->location) }},
                 ident_t{ std::move(ident->content) }
             });
         }
@@ -258,8 +258,8 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
             ref_pos = pos;
 
             return result_t::success(Term{
-                { std::move(string->location) },
-                integer_t{ string->content.front() }
+                lexer::ScatteredLocation{{ std::move(string->location) }},
+                static_cast<integer_t>(string->content.front())
             });
         }
     }
@@ -274,7 +274,7 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
                 case lexer::Type::Hex:   base = 16; break;
                 case lexer::Type::Float: {
                     return result_t::success(Term{
-                        { std::move(num->location) },
+                        lexer::ScatteredLocation{{ std::move(num->location) }},
                         float_t{ std::stof(num->content) }
                     });
                 }
@@ -283,8 +283,8 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
             ref_pos = pos;
 
             return result_t::success(Term{
-                { std::move(num->location) },
-                integer_t{ std::stoi(num->content, nullptr, base) }
+                lexer::ScatteredLocation{{ std::move(num->location) }},
+                static_cast<integer_t>(std::stoi(num->content, nullptr, base))
             });
         }
     }
@@ -307,14 +307,15 @@ Result<WithLocation<bytecode::Operations>> parse_operation(std::vector<lexer::To
     try {
         auto& token = token_res.get_result();
         auto ope = bytecode::OpDefinition::get(token.content).ope;
-        return result_t::success({{ token.location }, ope });
+        return result_t::success({ lexer::ScatteredLocation{{ token.location }}, ope });
     } catch(std::out_of_range const&) {
-        return result_t::error(Error::Type::Internal, { token.get_result().location });
+        auto& token = token_res.get_result();
+        return result_t::error(Error::Type::Internal, { token.location });
     }
 }
 
-Result<WithLocation<Register>> parse_register(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
-    using result_t = Result<WithLocation<Register>>;
+Result<Register> parse_register(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
+    using result_t = Result<Register>;
 
     auto reg_res = eat(tokens, pos, lexer::Type::Register);
     if (auto err = reg_res.get_if_error()) return result_t::error(*err);
@@ -324,22 +325,22 @@ Result<WithLocation<Register>> parse_register(std::vector<lexer::Token> const& t
     std::string_view name = reg.content;
     name.remove_prefix(1);
 
-    if (name == "A" ) return result_t::success({{ reg.location }, Register{ instruction::Register::A  }});
-    if (name == "B" ) return result_t::success({{ reg.location }, Register{ instruction::Register::B  }});
-    if (name == "C" ) return result_t::success({{ reg.location }, Register{ instruction::Register::C  }});
-    if (name == "D" ) return result_t::success({{ reg.location }, Register{ instruction::Register::D  }});
-    if (name == "E" ) return result_t::success({{ reg.location }, Register{ instruction::Register::E  }});
-    if (name == "F" ) return result_t::success({{ reg.location }, Register{ instruction::Register::F  }});
-    if (name == "G" ) return result_t::success({{ reg.location }, Register{ instruction::Register::G  }});
-    if (name == "H" ) return result_t::success({{ reg.location }, Register{ instruction::Register::H  }});
-    if (name == "I" ) return result_t::success({{ reg.location }, Register{ instruction::Register::I  }});
-    if (name == "J" ) return result_t::success({{ reg.location }, Register{ instruction::Register::J  }});
-    if (name == "K" ) return result_t::success({{ reg.location }, Register{ instruction::Register::K  }});
-    if (name == "L" ) return result_t::success({{ reg.location }, Register{ instruction::Register::L  }});
-    if (name == "PC") return result_t::success({{ reg.location }, Register{ instruction::Register::PC }});
-    if (name == "FG") return result_t::success({{ reg.location }, Register{ instruction::Register::FG }});
-    if (name == "SP") return result_t::success({{ reg.location }, Register{ instruction::Register::SP }});
-    if (name == "BP") return result_t::success({{ reg.location }, Register{ instruction::Register::BP }});
+    if (name == "A" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::A  });
+    if (name == "B" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::B  });
+    if (name == "C" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::C  });
+    if (name == "D" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::D  });
+    if (name == "E" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::E  });
+    if (name == "F" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::F  });
+    if (name == "G" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::G  });
+    if (name == "H" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::H  });
+    if (name == "I" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::I  });
+    if (name == "J" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::J  });
+    if (name == "K" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::K  });
+    if (name == "L" ) return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::L  });
+    if (name == "PC") return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::PC });
+    if (name == "FG") return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::FG });
+    if (name == "SP") return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::SP });
+    if (name == "BP") return result_t::success({ lexer::ScatteredLocation{{ reg.location }}, instruction::Register::BP });
 
     return result_t::error(Error::Type::Internal, { reg.location });
 }
@@ -350,15 +351,14 @@ Result<Argument> parse_argument(std::vector<lexer::Token> const& tokens, std::si
     std::size_t pos = ref_pos;
     auto bracket_token_res = eat(tokens, pos, lexer::Type::OpenBracket);
     if (auto* bracket_token = bracket_token_res.get_if_result()) {
-        Argument argument{ lexer::ScatteredLocation{{ bracket_token->location }}};
+        Argument argument{ lexer::ScatteredLocation{{ bracket_token->location }}, Register::register_t::A };
         auto& locations = argument.locations;
 
         auto reg_res = parse_register(tokens, pos);
         if (auto* reg = reg_res.get_if_result()) {
 
             locations.extends(reg->locations);
-            argument.value = Displacement{ reg->data, std::nullopt };
-            
+            argument.value = Displacement{ std::move(*reg), std::nullopt };
             auto plus_token_res = eat(tokens, pos, lexer::Type::Plus);
             if (auto* plus_token = plus_token_res.get_if_result()) {
                 auto term_res = parse_term(tokens, pos, precedence_of(BinaryRelation::Addition));
@@ -370,6 +370,29 @@ Result<Argument> parse_argument(std::vector<lexer::Token> const& tokens, std::si
 
                 auto& displacement = std::get<Displacement>(argument.value);
                 displacement.term = std::move(term);
+            } else {
+                auto minus_token_res = eat(tokens, pos, lexer::Type::Plus);
+                if (auto* minus_token = minus_token_res.get_if_result()) {
+                    auto term_res = parse_term(tokens, pos, precedence_of(BinaryRelation::Addition));
+                    if (auto err = term_res.get_if_error()) return result_t::error(*err);
+
+                    auto& term = term_res.get_result();
+
+                    Term exact_term {
+                        term.locations
+                    };
+
+                    exact_term.value = UnaryRelation {
+                        UnaryRelation::Opposite,
+                        std::make_unique<Term>(std::move(term))
+                    };
+
+                    locations.extends(exact_term.locations);
+                    locations.extends(minus_token->location);
+
+                    auto& displacement = std::get<Displacement>(argument.value);
+                    displacement.term = std::move(exact_term);
+                }
             }
 
         } else {
@@ -379,7 +402,7 @@ Result<Argument> parse_argument(std::vector<lexer::Token> const& tokens, std::si
             auto& term = term_res.get_result();
             locations.extends(std::move(term.locations));
 
-            argument.value = Dereferenced{ std::move(term.value) };
+            argument.value = Dereferenced{ std::make_unique<Term>(std::move(term)) };
         }
 
         auto closing_bracket = eat(tokens, pos, lexer::Type::CloseBracket);
@@ -394,7 +417,7 @@ Result<Argument> parse_argument(std::vector<lexer::Token> const& tokens, std::si
 
     auto reg_res = parse_register(tokens, ref_pos);
     if (auto* reg = reg_res.get_if_result()) {
-        return result_t::success(Argument{ std::move(reg->locations), std::move(reg->data) });
+        return result_t::success(Argument{ std::move(reg->locations), std::move(reg->reg) });
     }
 
     auto term_res = parse_term(tokens, ref_pos);
@@ -417,7 +440,7 @@ Result<WithLocation<std::vector<Argument>>> parse_arguments(std::vector<lexer::T
         auto arg = parse_argument(tokens, pos);
         if (arg.is_error()) { 
             ref_pos = pos; 
-            return result_t::success(args_locations); 
+            return result_t::success(std::move(args_locations)); 
         }
 
         locations.extends(
@@ -437,7 +460,7 @@ Result<WithLocation<std::vector<Argument>>> parse_arguments(std::vector<lexer::T
         comma = eat(tokens, pos, lexer::Type::Comma);
     }
     ref_pos = pos;
-    return result_t::success(args_locations); 
+    return result_t::success(std::move(args_locations)); 
 }
 
 Result<WithLocation<Command>> parse_command(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
@@ -445,19 +468,21 @@ Result<WithLocation<Command>> parse_command(std::vector<lexer::Token> const& tok
 
     auto ope_res = parse_operation(tokens, pos);
     if (auto err = ope_res.get_if_error()) return result_t::error(*err);
+    auto& ope = ope_res.get_result();
 
-    auto args = parse_arguments(tokens, pos);
-    if (auto err = args.get_if_error()) return result_t::error(*err);
+    auto args_res = parse_arguments(tokens, pos);
+    if (auto err = args_res.get_if_error()) return result_t::error(*err);
+    auto& args = args_res.get_result();
 
     WithLocation<Command> command_locations;
 
     auto& command = command_locations.data;
-    command.ope = std::move(ope_res.get_result().first);
-    command.args = std::move(args.get_result().first);
+    command.ope = std::move(ope.data);
+    command.args = std::move(args.data);
 
     auto& locations = command_locations.locations;
-    locations.extends(std::move(args.get_result().second));
-    locations.extends(std::move(ope_res.get_result().second));
+    locations.extends(std::move(args.locations));
+    locations.extends(std::move(ope.locations));
 
     return result_t::success(std::move(command_locations));
 }
@@ -466,8 +491,9 @@ Result<WithLocation<Data>> parse_data(std::vector<lexer::Token> const& tokens, s
     using result_t = Result<WithLocation<Data>>;
     std::size_t pos = ref_pos;
 
-    auto token = eat_one_of(tokens, pos, { lexer::Type::DB, lexer::Type::DD, lexer::Type::DW });
-    if (auto err = token.get_if_error()) { return result_t::error(*err); }
+    auto token_res = eat_one_of(tokens, pos, { lexer::Type::DB, lexer::Type::DD, lexer::Type::DW });
+    if (auto err = token_res.get_if_error()) { return result_t::error(*err); }
+    auto& token = token_res.get_result();
 
     WithLocation<Data> data_locations;
 
@@ -475,18 +501,18 @@ Result<WithLocation<Data>> parse_data(std::vector<lexer::Token> const& tokens, s
     lexer::ScatteredLocation locations = data_locations.locations;
     std::vector<Constant>& constants = data.constants;
 
-    switch (token.get_result().type) {
+    switch (token.type) {
         case lexer::Type::DB:   data.size = Data::Byte; break;
         case lexer::Type::DW:   data.size = Data::Word; break;
         case lexer::Type::DD:   data.size = Data::DoubleWord; break;
         default: std::exit(666); break;
     }
     
-    locations.extends(token.get_result().location);
+    locations.extends(token.location);
 
     {
         if (auto term = parse_term(tokens, pos); term.is_success()) {
-            auto& res = term.get_resul();
+            auto& res = term.get_result();
 
             constants.emplace_back(Constant{
                 std::move(res.locations),
@@ -500,7 +526,7 @@ Result<WithLocation<Data>> parse_data(std::vector<lexer::Token> const& tokens, s
             auto& res = string.get_result();
 
             constants.emplace_back(Constant{
-                std::move(res.location),
+                lexer::ScatteredLocation{{ std::move(res.location) }},
                 string_t{ res.content }
             });
         }
@@ -511,7 +537,7 @@ Result<WithLocation<Data>> parse_data(std::vector<lexer::Token> const& tokens, s
     auto comma = eat(tokens, pos, lexer::Type::Comma);
     while(comma.is_success()) {
         if (auto term = parse_term(tokens, pos); term.is_success()) {
-            auto& res = term.get_resul();
+            auto& res = term.get_result();
 
             constants.emplace_back(Constant{
                 std::move(res.locations),
@@ -525,7 +551,7 @@ Result<WithLocation<Data>> parse_data(std::vector<lexer::Token> const& tokens, s
             auto& res = string.get_result();
 
             constants.emplace_back(Constant{
-                std::move(res.location),
+                lexer::ScatteredLocation{{ std::move(res.location) }},
                 string_t{ res.content }
             });
         }
@@ -543,14 +569,15 @@ Result<WithLocation<Data>> parse_data(std::vector<lexer::Token> const& tokens, s
 Result<WithLocation<label_t>> parse_label(std::vector<lexer::Token> const& tokens, std::size_t& pos) {
     using result_t = Result<WithLocation<label_t>>;
 
-    auto ident = eat(tokens, pos, lexer::Type::Ident);
-    if (auto err = ident.get_if_error()) return result_t::error(*err);
+    auto ident_res = eat(tokens, pos, lexer::Type::Ident);
+    if (auto err = ident_res.get_if_error()) return result_t::error(*err);
+    auto& ident = ident_res.get_result();
 
     auto colon = eat(tokens, pos, lexer::Type::Colon);
     if (auto err = colon.get_if_error()) return result_t::error(*err);
 
-    WithLocation<label_t> label{ lexer::ScatteredLocation{}, ident.get_result().content };
-    label.locations.extends(ident.get_result().location);
+    WithLocation<label_t> label{ lexer::ScatteredLocation{}, ident.content };
+    label.locations.extends(ident.location);
     label.locations.extends(colon.get_result().location);
 
     return result_t::success(std::move(label));
@@ -566,7 +593,10 @@ Result<WithLocation<Directive>> parse_directive(std::vector<lexer::Token> const&
     if (auto err = ident.get_if_error()) return result_t::error(*err);
     
     if (ident.get_result().content == "align") {
-        Term term = parse_term(tokens, pos);
+        auto term_res = parse_term(tokens, pos);
+        if (auto err = term_res.get_if_error()) return result_t::error(*err);
+        auto& term = term_res.get_result();
+
         WithLocation<Directive> directive{
             term.locations,
             Align{ std::move(term) }
@@ -586,45 +616,45 @@ Result<Statement> parse_statement(std::vector<lexer::Token> const& tokens, std::
 
     {
         std::size_t pos = ref_pos;
-        auto label = parse_label(tokens, pos);
-        if(label.is_success()) { 
+        auto label_res = parse_label(tokens, pos);
+        if(auto* label = label_res.get_if_result()) { 
             ref_pos = pos;
             return result_t::success(Statement{
-                label.locations,
-                label.data
+                std::move(label->locations),
+                std::move(label->data)
             });
         }
     }
     {
         std::size_t pos = ref_pos;
-        auto command = parse_command(tokens, pos);
-        if(command.is_success()) { 
+        auto command_res = parse_command(tokens, pos);
+        if(auto* command = command_res.get_if_result()) { 
             ref_pos = pos;
             return result_t::success(Statement{
-                command.locations,
-                command.data
+                std::move(command->locations),
+                std::move(command->data)
             });
         }
     }
     {
         std::size_t pos = ref_pos;
-        auto data = parse_data(tokens, pos);
-        if(data.is_success()) { 
+        auto data_res = parse_data(tokens, pos);
+        if(auto data = data_res.get_if_result()) { 
             ref_pos = pos;
             return result_t::success(Statement{
-                data.locations,
-                data.data
+                std::move(data->locations),
+                std::move(data->data)
             });
         }
     }
     {
         std::size_t pos = ref_pos;
-        auto directive = parse_directive(tokens, pos);
-        if(directive.is_success()) { 
+        auto directive_res = parse_directive(tokens, pos);
+        if(auto* directive = directive_res.get_if_result()) { 
             ref_pos = pos;
             return result_t::success(Statement{
-                directive.locations,
-                directive.data
+                std::move(directive->locations),
+                std::move(directive->data)
             });
         }
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vcrate/instruction/Argument.hpp>
-#include <vcrate/vasm/parser/ast/Argument.hpp>
+//#include <vcrate/vasm/parser/ast/Argument.hpp>
 
 #include <variant>
 #include <ostream>
@@ -11,7 +11,7 @@
 #include <vcrate/vasm/generator/Generator.hpp>
 
 namespace vcrate::vasm::generator {
-
+/*
 template<typename T, typename R>
 class LabelDependant {
     struct Deferred {
@@ -67,5 +67,5 @@ private:
     std::variant<T, Deferred> arg;
 
 };
-
+*/
 }

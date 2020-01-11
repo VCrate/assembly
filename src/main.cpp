@@ -84,13 +84,7 @@ int main() {
             std::cout << statement << '\n';
         }
     }
-/*
-    vcrate::vasm::generator::Generator gen;
-    for(auto& statement : res_.get_result()) {
-        statement->generate(gen);
-    }
 
-    std::cout << '\n';
-    std::cout << gen << '\n';
-*/
+    auto res__ = vcrate::vasm::generator::generate(res_.get_result());
+
 }

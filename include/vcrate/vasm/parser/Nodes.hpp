@@ -163,11 +163,15 @@ struct Displacement {
     std::optional<Term> term;
 };
 
+struct Pointer {
+    Term term;
+};
+
 struct Argument : Located {
     using term_t = Term::variant_t;
     using register_t = Register::register_t;
 
-    using variant_t = std::variant<term_t, register_t, Displacement>;
+    using variant_t = std::variant<term_t, register_t, Displacement, Pointer>;
 
     variant_t value;
 };

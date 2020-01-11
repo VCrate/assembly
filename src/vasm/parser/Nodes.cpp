@@ -1,5 +1,7 @@
 #include <vcrate/vasm/parser/Nodes.hpp>
 
+#include <vcrate/vasm/Visitor.hpp>
+
 namespace vcrate::vasm::parser {
 
 precedence_t precedence_of(BinaryRelation::Type type) {
@@ -39,9 +41,6 @@ precedence_t precedence_of(BinaryRelation::Type type) {
         default:                                    return 0;
     }
 }
-
-template<class... Ts> struct Visitor : Ts... { using Ts::operator()...; };
-template<class... Ts> Visitor(Ts...) -> Visitor<Ts...>;
 
 std::ostream& operator << (std::ostream& os, Term const& term) {
     return os << term.value;
@@ -94,7 +93,7 @@ std::ostream& operator << (std::ostream& os, Term::variant_t const& term) {
                 return os << *rel.rhs << ')';
             },
             [&os] (Dereferenced const& d) -> std::ostream& {
-                return os << '[' << *d.term << ']';
+                return os << "#[" << *d.term << ']';
             },
         },
         term);
@@ -129,6 +128,9 @@ std::ostream& operator << (std::ostream& os, Argument::variant_t const& argument
             },
             [&os] (Argument::term_t const& t) -> std::ostream& {
                 return os << t;
+            },
+            [&os] (Pointer const& p) -> std::ostream& {
+                return os << '[' << p.term << ']';
             },
             [&os] (Displacement const& d) -> std::ostream& {
                 os << '[' << d.reg.reg;

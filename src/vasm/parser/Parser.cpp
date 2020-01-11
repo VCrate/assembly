@@ -201,8 +201,11 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
         }
     }
     {
-        auto opening_bracket_res = eat(tokens, pos, lexer::Type::OpenBracket);
-        if (auto* opening_bracket = opening_bracket_res.get_if_result()) {
+        auto special_symbol_res = eat(tokens, pos, lexer::Type::Directive);
+        if (auto* special_symbol = special_symbol_res.get_if_result()) {
+            auto opening_bracket = eat(tokens, pos, lexer::Type::OpenBracket);
+            if (auto err = opening_bracket.get_if_error()) return result_t::error(*err);
+
             auto term_res = parse_term(tokens, pos);
             if (auto err = term_res.get_if_error()) return result_t::error(*err);
             auto& term = term_res.get_result();
@@ -218,7 +221,8 @@ Result<Term> parse_sub_term(std::vector<lexer::Token> const& tokens, std::size_t
                 }
             };
 
-            res.locations.extends(opening_bracket->location);
+            res.locations.extends(special_symbol->location);
+            res.locations.extends(opening_bracket.get_result().location);
             res.locations.extends(closing_bracket.get_result().location);
 
             return result_t::success(std::move(res));
@@ -402,7 +406,7 @@ Result<Argument> parse_argument(std::vector<lexer::Token> const& tokens, std::si
             auto& term = term_res.get_result();
             locations.extends(std::move(term.locations));
 
-            argument.value = Dereferenced{ std::make_unique<Term>(std::move(term)) };
+            argument.value = Pointer{ std::move(term) };
         }
 
         auto closing_bracket = eat(tokens, pos, lexer::Type::CloseBracket);
